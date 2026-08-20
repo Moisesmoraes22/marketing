@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { registerHandler, startPoller } from "./poller.js";
 import { runDiscoveryAgent } from "./agents/discovery.js";
