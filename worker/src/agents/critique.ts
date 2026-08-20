@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase.js";
 import { completeJson } from "../lib/groq.js";
+import { withContentItemErrorHandling } from "../lib/errors.js";
 import type { Job } from "../lib/types.js";
 
 interface CritiquePayload {
@@ -30,45 +31,47 @@ export async function runCritiqueAgent(job: Job): Promise<void> {
 
   const { content_item_id } = job.payload;
 
-  const { data: analysis, error: analysisError } = await supabase
-    .from("analyses")
-    .select("content")
-    .eq("content_item_id", content_item_id)
-    .eq("type", "analysis")
-    .single();
-  if (analysisError) throw new Error(analysisError.message);
+  await withContentItemErrorHandling(content_item_id, async () => {
+    const { data: analysis, error: analysisError } = await supabase
+      .from("analyses")
+      .select("content")
+      .eq("content_item_id", content_item_id)
+      .eq("type", "analysis")
+      .single();
+    if (analysisError) throw new Error(analysisError.message);
 
-  const { data: contentItem, error: contentError } = await supabase
-    .from("content_items")
-    .select("search_id")
-    .eq("id", content_item_id)
-    .single();
-  if (contentError) throw new Error(contentError.message);
+    const { data: contentItem, error: contentError } = await supabase
+      .from("content_items")
+      .select("search_id")
+      .eq("id", content_item_id)
+      .single();
+    if (contentError) throw new Error(contentError.message);
 
-  let niche: { name: string; hashtags: string[] } | null = null;
-  if (contentItem.search_id) {
-    const { data: search } = await supabase
-      .from("searches")
-      .select("name, hashtags")
-      .eq("id", contentItem.search_id)
-      .maybeSingle();
-    if (search) niche = { name: search.name, hashtags: search.hashtags };
-  }
+    let niche: { name: string; hashtags: string[] } | null = null;
+    if (contentItem.search_id) {
+      const { data: search } = await supabase
+        .from("searches")
+        .select("name, hashtags")
+        .eq("id", contentItem.search_id)
+        .maybeSingle();
+      if (search) niche = { name: search.name, hashtags: search.hashtags };
+    }
 
-  const userContent = JSON.stringify({ analysis: analysis.content, niche });
+    const userContent = JSON.stringify({ analysis: analysis.content, niche });
 
-  const result = await completeJson<CritiqueResult>(SYSTEM_PROMPT, userContent);
+    const result = await completeJson<CritiqueResult>(SYSTEM_PROMPT, userContent);
 
-  const { error: insertError } = await supabase.from("analyses").insert({
-    content_item_id,
-    type: "critique",
-    content: result,
+    const { error: insertError } = await supabase.from("analyses").insert({
+      content_item_id,
+      type: "critique",
+      content: result,
+    });
+    if (insertError) throw new Error(insertError.message);
+
+    const { error: updateError } = await supabase
+      .from("content_items")
+      .update({ status: "done" })
+      .eq("id", content_item_id);
+    if (updateError) throw new Error(updateError.message);
   });
-  if (insertError) throw new Error(insertError.message);
-
-  const { error: updateError } = await supabase
-    .from("content_items")
-    .update({ status: "done" })
-    .eq("id", content_item_id);
-  if (updateError) throw new Error(updateError.message);
 }

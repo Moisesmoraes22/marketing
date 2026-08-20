@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase.js";
 import { completeJson } from "../lib/groq.js";
+import { withContentItemErrorHandling } from "../lib/errors.js";
 import type { Job } from "../lib/types.js";
 
 interface AnalysisPayload {
@@ -30,38 +31,40 @@ export async function runAnalysisAgent(job: Job): Promise<void> {
 
   const { content_item_id } = job.payload;
 
-  const { data: contentItem, error: contentError } = await supabase
-    .from("content_items")
-    .select("caption")
-    .eq("id", content_item_id)
-    .single();
-  if (contentError) throw new Error(contentError.message);
+  await withContentItemErrorHandling(content_item_id, async () => {
+    const { data: contentItem, error: contentError } = await supabase
+      .from("content_items")
+      .select("caption")
+      .eq("id", content_item_id)
+      .single();
+    if (contentError) throw new Error(contentError.message);
 
-  const { data: transcription } = await supabase
-    .from("analyses")
-    .select("content")
-    .eq("content_item_id", content_item_id)
-    .eq("type", "transcription")
-    .maybeSingle();
+    const { data: transcription } = await supabase
+      .from("analyses")
+      .select("content")
+      .eq("content_item_id", content_item_id)
+      .eq("type", "transcription")
+      .maybeSingle();
 
-  const userContent = JSON.stringify({
-    caption: contentItem?.caption ?? null,
-    transcription: (transcription?.content as { text?: string } | null)?.text ?? null,
+    const userContent = JSON.stringify({
+      caption: contentItem?.caption ?? null,
+      transcription: (transcription?.content as { text?: string } | null)?.text ?? null,
+    });
+
+    const result = await completeJson<AnalysisResult>(SYSTEM_PROMPT, userContent);
+
+    const { error: insertError } = await supabase.from("analyses").insert({
+      content_item_id,
+      type: "analysis",
+      content: result,
+    });
+    if (insertError) throw new Error(insertError.message);
+
+    const { error: jobError } = await supabase.from("jobs").insert({
+      type: "critique",
+      payload: { content_item_id },
+      status: "pending",
+    });
+    if (jobError) throw new Error(jobError.message);
   });
-
-  const result = await completeJson<AnalysisResult>(SYSTEM_PROMPT, userContent);
-
-  const { error: insertError } = await supabase.from("analyses").insert({
-    content_item_id,
-    type: "analysis",
-    content: result,
-  });
-  if (insertError) throw new Error(insertError.message);
-
-  const { error: jobError } = await supabase.from("jobs").insert({
-    type: "critique",
-    payload: { content_item_id },
-    status: "pending",
-  });
-  if (jobError) throw new Error(jobError.message);
 }
