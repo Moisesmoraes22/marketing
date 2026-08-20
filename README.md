@@ -40,7 +40,7 @@ no painel do Supabase (ou habilite o cadastro público) para conseguir logar.
 ```bash
 cd worker
 cp .env.example .env
-# preencha SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY
+# preencha SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, APIFY_API_TOKEN e GROQ_API_KEY
 npm install
 npm run dev
 ```
@@ -48,12 +48,17 @@ npm run dev
 O worker sobe em `http://localhost:3001` (`GET /health`) e começa a
 consultar a tabela `jobs` a cada 30 segundos.
 
+> **Dependência externa:** o agente de transcrição chama o binário `yt-dlp`
+> via `child_process` — ele **não é um pacote npm**. Instale localmente com
+> `pip install yt-dlp` (ou `winget install yt-dlp`) e garanta que esteja no
+> `PATH`. Sem isso, jobs do tipo `transcribe` falham com status `error`.
+
 ## Deploy
 
 | Serviço | O que fazer |
 |---|---|
 | **Vercel** | Conectar o repositório → Root Directory `/frontend` → variáveis `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
-| **Render** | Web Service → Root Directory `/worker` → build `npm install && npm run build` → start `npm start` → variáveis `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GROQ_API_KEY`, `APIFY_API_TOKEN` |
+| **Render** | Web Service → Root Directory `/worker` → build `pip install -U yt-dlp && npm install && npm run build` → start `npm start` → variáveis `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GROQ_API_KEY`, `APIFY_API_TOKEN` |
 | **Supabase** | Já provisionado no passo 1 |
 
 > O Render Free hiberna após 15 min sem tráfego (cold start de ~30s no

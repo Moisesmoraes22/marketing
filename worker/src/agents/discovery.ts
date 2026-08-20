@@ -147,7 +147,9 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
       continue;
     }
 
-    if (mediaType === "reel" && inserted) {
+    if (!inserted) continue;
+
+    if (mediaType === "reel") {
       const { error: jobError } = await supabase.from("jobs").insert({
         type: "transcribe",
         payload: { content_item_id: inserted.id, source_url: post.url },
@@ -155,7 +157,27 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
       });
       if (jobError) {
         console.error("[discovery] falha ao criar job de transcrição:", jobError.message);
+        continue;
       }
+      await supabase
+        .from("content_items")
+        .update({ status: "transcribing" })
+        .eq("id", inserted.id);
+    } else {
+      // post/carrossel não têm áudio — vão direto para análise
+      const { error: jobError } = await supabase.from("jobs").insert({
+        type: "analyze",
+        payload: { content_item_id: inserted.id },
+        status: "pending",
+      });
+      if (jobError) {
+        console.error("[discovery] falha ao criar job de análise:", jobError.message);
+        continue;
+      }
+      await supabase
+        .from("content_items")
+        .update({ status: "analyzing" })
+        .eq("id", inserted.id);
     }
   }
 
