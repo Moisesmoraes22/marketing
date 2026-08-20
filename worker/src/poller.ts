@@ -78,8 +78,22 @@ async function tick() {
   }
 }
 
+// setInterval sobreporia execuções se um job demorar mais que o intervalo
+// (ex: transcrição de vídeo) — o que rodaria jobs em paralelo e estouraria
+// os limites de taxa do Groq/Apify. Reagendar só após o tick anterior
+// terminar garante no máximo 1 job em processamento por vez.
 export function startPoller() {
   console.log(`[poller] iniciado — intervalo de ${POLL_INTERVAL_MS / 1000}s`);
-  tick();
-  setInterval(tick, POLL_INTERVAL_MS);
+
+  async function loop() {
+    try {
+      await tick();
+    } catch (err) {
+      console.error("[poller] erro inesperado no tick:", err);
+    } finally {
+      setTimeout(loop, POLL_INTERVAL_MS);
+    }
+  }
+
+  loop();
 }

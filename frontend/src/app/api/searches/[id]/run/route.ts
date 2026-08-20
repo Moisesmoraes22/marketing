@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+
+const idSchema = z.string().uuid();
 
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const parsedId = idSchema.safeParse(rawId);
+  if (!parsedId.success) {
+    return NextResponse.json({ error: "id inválido" }, { status: 400 });
+  }
+  const id = parsedId.data;
+
   const supabase = await createClient();
 
   const {

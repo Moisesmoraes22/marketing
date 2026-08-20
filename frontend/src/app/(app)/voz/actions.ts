@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 function splitList(raw: string): string[] {
@@ -10,18 +11,33 @@ function splitList(raw: string): string[] {
     .filter(Boolean);
 }
 
+const voiceProfileSchema = z.object({
+  target_audience: z.string().trim().max(500).nullable(),
+  tone_adjectives: z.array(z.string().trim().min(1).max(40)).max(20),
+  words_we_use: z.array(z.string().trim().min(1).max(60)).max(30),
+  words_we_avoid: z.array(z.string().trim().min(1).max(60)).max(30),
+  example_approved_post: z.string().trim().max(5000).nullable(),
+});
+
+const idSchema = z.string().uuid();
+
 export async function saveVoiceProfile(formData: FormData) {
   const supabase = await createClient();
 
-  const payload = {
+  const parsed = voiceProfileSchema.safeParse({
     target_audience: String(formData.get("target_audience") ?? "").trim() || null,
     tone_adjectives: splitList(String(formData.get("tone_adjectives") ?? "")),
     words_we_use: splitList(String(formData.get("words_we_use") ?? "")),
     words_we_avoid: splitList(String(formData.get("words_we_avoid") ?? "")),
     example_approved_post:
       String(formData.get("example_approved_post") ?? "").trim() || null,
-    updated_at: new Date().toISOString(),
-  };
+  });
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos");
+  }
+
+  const payload = { ...parsed.data, updated_at: new Date().toISOString() };
 
   const { data: existing } = await supabase
     .from("voice_profile")
@@ -40,6 +56,9 @@ export async function saveVoiceProfile(formData: FormData) {
 }
 
 export async function generateCalibrationDraft(voiceProfileId: string) {
+  const parsedId = idSchema.safeParse(voiceProfileId);
+  if (!parsedId.success) throw new Error("voiceProfileId inválido");
+
   const supabase = await createClient();
 
   const { data: candidate, error: candidateError } = await supabase
@@ -78,6 +97,11 @@ export async function submitCalibrationFeedback(
   approved: boolean,
   note: string,
 ) {
+  if (!idSchema.safeParse(scriptId).success) throw new Error("scriptId inválido");
+  if (!idSchema.safeParse(voiceProfileId).success) {
+    throw new Error("voiceProfileId inválido");
+  }
+
   const supabase = await createClient();
 
   const { error: scriptError } = await supabase
