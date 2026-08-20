@@ -20,6 +20,8 @@ interface Profile {
   email: string;
   name: string | null;
   role: string;
+  avatar_url: string | null;
+  instagram_handle: string | null;
   created_at: string;
 }
 
@@ -81,13 +83,30 @@ export function TeamSection({
               className="absolute inset-x-0 bottom-0 h-1/2 origin-bottom scale-y-0 rounded-t-full bg-gradient-to-t from-primary/10 to-transparent transition-transform duration-500 ease-out group-hover:scale-y-100"
               aria-hidden
             />
-            <InstagramIcon
-              className="absolute right-4 top-4 h-5 w-5 text-muted-foreground opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-              aria-hidden
-            />
+            {member.instagram_handle && (
+              <a
+                href={`https://instagram.com/${member.instagram_handle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`Instagram de ${member.name ?? member.email}`}
+                className="absolute right-4 top-4 z-20 text-muted-foreground opacity-0 transition-opacity duration-300 hover:text-primary group-hover:opacity-100"
+              >
+                <InstagramIcon className="h-5 w-5" aria-hidden />
+              </a>
+            )}
             <div className="relative z-10 flex flex-col items-center gap-3">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-transparent bg-primary/10 text-lg font-semibold text-primary transition-colors duration-300 group-hover:border-primary">
-                {initialsFrom(member.name, member.email)}
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-transparent bg-primary/10 text-lg font-semibold text-primary transition-colors duration-300 group-hover:border-primary">
+                {member.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={member.avatar_url}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initialsFrom(member.name, member.email)
+                )}
               </div>
               <div>
                 <p className="font-medium text-foreground">
@@ -124,8 +143,17 @@ export function TeamSection({
               </SheetHeader>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary">
-                    {initialsFrom(selected.name, selected.email)}
+                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-base font-semibold text-primary">
+                    {selected.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={selected.avatar_url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      initialsFrom(selected.name, selected.email)
+                    )}
                   </div>
                   <div>
                     <p className="font-medium">{selected.email}</p>
@@ -137,6 +165,17 @@ export function TeamSection({
                     </Badge>
                   </div>
                 </div>
+                {selected.instagram_handle && (
+                  <a
+                    href={`https://instagram.com/${selected.instagram_handle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    <InstagramIcon className="h-4 w-4" aria-hidden />@
+                    {selected.instagram_handle}
+                  </a>
+                )}
                 <div className="text-sm text-muted-foreground">
                   Membro desde{" "}
                   {new Date(selected.created_at).toLocaleDateString("pt-BR")}

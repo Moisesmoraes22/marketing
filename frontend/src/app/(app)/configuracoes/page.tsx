@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { ProfileSection } from "./profile-section";
 import { TeamSection } from "./team-section";
 
 export default async function ConfiguracoesPage() {
@@ -10,10 +11,14 @@ export default async function ConfiguracoesPage() {
   const [{ data: members }, { data: currentProfile }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, name, role, created_at")
+      .select("id, email, name, role, avatar_url, instagram_handle, created_at")
       .order("created_at", { ascending: true }),
     user
-      ? supabase.from("profiles").select("role").eq("id", user.id).single()
+      ? supabase
+          .from("profiles")
+          .select("id, email, name, role, avatar_url, instagram_handle")
+          .eq("id", user.id)
+          .single()
       : Promise.resolve({ data: null }),
   ]);
 
@@ -25,6 +30,8 @@ export default async function ConfiguracoesPage() {
           Usuários do time, integrações e API keys.
         </p>
       </div>
+
+      {currentProfile && <ProfileSection profile={currentProfile} />}
 
       <TeamSection
         members={members ?? []}

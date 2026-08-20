@@ -14,6 +14,8 @@ create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
   name text,
+  avatar_url text,
+  instagram_handle text,
   role text not null default 'member',
   created_at timestamptz not null default now()
 );
@@ -52,6 +54,23 @@ create trigger on_auth_user_created
 -- a função só deve rodar via trigger, nunca via RPC pública
 -- (linter de segurança do Supabase sinaliza SECURITY DEFINER exposta)
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
+-- =========================================================
+-- storage: avatares de perfil
+-- =========================================================
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 2097152, array['image/png', 'image/jpeg', 'image/webp'])
+on conflict (id) do nothing;
+
+create policy "avatars: leitura pública"
+  on storage.objects for select
+  using (bucket_id = 'avatars');
+
+create policy "avatars: usuário gerencia o próprio arquivo"
+  on storage.objects for all
+  to authenticated
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 
 -- =========================================================
 -- searches
