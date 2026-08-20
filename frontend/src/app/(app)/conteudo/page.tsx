@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ContentItem } from "@/lib/types";
 import { ContentFeed } from "./content-feed";
+import { ProcessingBanner } from "./processing-banner";
 
 const PAGE_SIZE = 12;
 
@@ -32,6 +33,7 @@ export default async function ConteudoPage({
           Feed de posts coletados com status do pipeline em tempo real.
         </p>
       </div>
+      <ProcessingBanner />
       <ContentFeed initialItems={items} page={page} pageCount={pageCount} />
     </div>
   );
