@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Search,
@@ -58,44 +59,61 @@ export function AppSidebar({ userEmail }: { userEmail: string | null }) {
             {NAV_ITEMS.map((item) => {
               const active = pathname.startsWith(item.href);
               return (
-                <SidebarLink
-                  key={item.href}
-                  link={{
-                    label: item.label,
-                    href: item.href,
-                    icon: (
-                      <item.icon
-                        className={cn(
-                          "h-4.5 w-4.5 shrink-0",
-                          active ? "text-primary" : "text-sidebar-foreground/70",
-                        )}
-                      />
-                    ),
-                  }}
-                  className={cn(active && "bg-sidebar-accent")}
-                />
+                <div key={item.href} className="relative">
+                  {active && (
+                    <motion.div
+                      layoutId="sidebar-active-pill"
+                      className="absolute inset-0 rounded-md bg-sidebar-accent"
+                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <SidebarLink
+                    link={{
+                      label: item.label,
+                      href: item.href,
+                      icon: (
+                        <item.icon
+                          className={cn(
+                            "h-4.5 w-4.5 shrink-0 transition-colors",
+                            active ? "text-primary" : "text-sidebar-foreground/70",
+                          )}
+                        />
+                      ),
+                    }}
+                    className="relative z-10"
+                  />
+                </div>
               );
             })}
           </div>
         </div>
         <div className="flex flex-col gap-1 border-t border-sidebar-border pt-3">
-          <SidebarLink
-            link={{
-              label: "Configurações",
-              href: "/configuracoes",
-              icon: (
-                <Settings
-                  className={cn(
-                    "h-4.5 w-4.5 shrink-0",
-                    pathname.startsWith("/configuracoes")
-                      ? "text-primary"
-                      : "text-sidebar-foreground/70",
-                  )}
-                />
-              ),
-            }}
-            className={cn(pathname.startsWith("/configuracoes") && "bg-sidebar-accent")}
-          />
+          <div className="relative">
+            {pathname.startsWith("/configuracoes") && (
+              <motion.div
+                layoutId="sidebar-active-pill"
+                className="absolute inset-0 rounded-md bg-sidebar-accent"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
+            <SidebarLink
+              link={{
+                label: "Configurações",
+                href: "/configuracoes",
+                icon: (
+                  <Settings
+                    className={cn(
+                      "h-4.5 w-4.5 shrink-0 transition-colors",
+                      pathname.startsWith("/configuracoes")
+                        ? "text-primary"
+                        : "text-sidebar-foreground/70",
+                    )}
+                  />
+                ),
+              }}
+              className="relative z-10"
+            />
+          </div>
           <SidebarLink
             link={{
               label: userEmail ?? "Usuário",
