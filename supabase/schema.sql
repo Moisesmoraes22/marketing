@@ -49,6 +49,10 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- a função só deve rodar via trigger, nunca via RPC pública
+-- (linter de segurança do Supabase sinaliza SECURITY DEFINER exposta)
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 -- =========================================================
 -- searches
 -- =========================================================
