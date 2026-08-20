@@ -10,20 +10,44 @@ interface DiscoverJob {
   status: "pending" | "running" | "done" | "error";
   payload: { results_limit?: number; search_id?: string };
   error_message: string | null;
+  started_at: string | null;
+  created_at: string;
+}
+
+interface DiscoverStats {
+  secondsPerItem: number;
+  baseSeconds: number;
 }
 
 const MAX_SKELETONS = 12;
+const TICK_MS = 1000;
+
+function formatRemaining(seconds: number): string {
+  if (seconds <= 0) return "quase lá...";
+  if (seconds < 60) return `~${Math.ceil(seconds)}s restantes`;
+  const minutes = Math.ceil(seconds / 60);
+  return `~${minutes} min restante${minutes > 1 ? "s" : ""}`;
+}
 
 export function DiscoveryStatus() {
   const instanceId = useId();
   const [activeJobs, setActiveJobs] = useState<Map<string, DiscoverJob>>(new Map());
+  const [stats, setStats] = useState<DiscoverStats | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    fetch("/api/jobs/discover-stats")
+      .then((res) => res.json())
+      .then(setStats)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
 
     supabase
       .from("jobs")
-      .select("id, status, payload, error_message")
+      .select("id, status, payload, error_message, started_at, created_at")
       .eq("type", "discover")
       .in("status", ["pending", "running"])
       .then(({ data }) => {
@@ -77,18 +101,36 @@ export function DiscoveryStatus() {
     };
   }, [instanceId]);
 
+  useEffect(() => {
+    if (activeJobs.size === 0) return;
+    const interval = setInterval(() => setNow(Date.now()), TICK_MS);
+    return () => clearInterval(interval);
+  }, [activeJobs.size]);
+
   if (activeJobs.size === 0) return null;
 
+  const jobs = Array.from(activeJobs.values());
   const skeletonCount = Math.min(
     MAX_SKELETONS,
-    Math.max(...Array.from(activeJobs.values()).map((j) => j.payload.results_limit ?? 6)),
+    Math.max(...jobs.map((j) => j.payload.results_limit ?? 6)),
   );
+
+  const running = jobs.find((j) => j.status === "running" && j.started_at);
+  let etaLabel = "isso pode levar alguns minutos...";
+  if (running && stats && running.started_at) {
+    const items = running.payload.results_limit ?? 6;
+    const totalEstimateSec = stats.baseSeconds + stats.secondsPerItem * items;
+    const elapsedSec = (now - new Date(running.started_at).getTime()) / 1000;
+    etaLabel = formatRemaining(totalEstimateSec - elapsedSec);
+  } else if (jobs.some((j) => j.status === "pending")) {
+    etaLabel = "na fila, aguardando a busca anterior terminar...";
+  }
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Buscando posts no Instagram — isso pode levar alguns minutos...
+        Buscando posts no Instagram — {etaLabel}
       </div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
         {Array.from({ length: skeletonCount }).map((_, i) => (

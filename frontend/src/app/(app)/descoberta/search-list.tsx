@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { AtSign, Clock, Hash, ListVideo, TrendingUp } from "lucide-react";
+import { AtSign, Check, Clock, Copy, Hash, ListVideo, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,20 +84,54 @@ function TagList({ items }: { items: string[] }) {
 function Field({
   icon: Icon,
   label,
+  action,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex gap-2.5">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          {action}
+        </div>
         <div className="text-sm">{children}</div>
       </div>
     </div>
+  );
+}
+
+function CopyHashtagsButton({ hashtags }: { hashtags: string[] }) {
+  const [copied, setCopied] = useState(false);
+
+  if (hashtags.length === 0) return null;
+
+  function handleCopy() {
+    navigator.clipboard
+      .writeText(hashtags.join(", "))
+      .then(() => {
+        setCopied(true);
+        toast.success("Hashtags copiadas");
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => toast.error("Não consegui copiar"));
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+      title="Copiar hashtags separadas por vírgula"
+    >
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {copied ? "Copiado" : "Copiar"}
+    </button>
   );
 }
 
@@ -154,7 +188,11 @@ function SearchCard({ search, onRun }: { search: Search; onRun?: () => void }) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4">
-        <Field icon={Hash} label="Hashtags">
+        <Field
+          icon={Hash}
+          label="Hashtags"
+          action={<CopyHashtagsButton hashtags={search.hashtags} />}
+        >
           <TagList items={search.hashtags} />
         </Field>
         <Field icon={AtSign} label="Contas">
