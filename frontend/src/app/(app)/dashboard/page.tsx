@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Heart, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OmegaScore, RecommendationBadge } from "@/components/omega-score";
+import { OpportunityBadge, RecommendationBadge } from "@/components/opportunity";
 import { createClient } from "@/lib/supabase/server";
 import type { ContentItem, ScriptRow } from "@/lib/types";
 
@@ -28,27 +28,30 @@ export default async function DashboardPage() {
   const weekAgo = new Date(Date.now() - WEEK_MS).toISOString();
 
   const [
-    { count: contentFound },
-    { count: contentAnalyzed },
-    { count: highPotential },
-    { count: opportunities },
+    { count: opportunitiesFound },
+    { count: highOpportunity },
+    { count: moderateOpportunity },
+    { count: lowOpportunity },
     { count: scriptsThisWeek },
     { data: topOpportunities },
     { data: recentScripts },
   ] = await Promise.all([
-    supabase.from("content_items").select("*", { count: "exact", head: true }),
     supabase
       .from("content_items")
       .select("*", { count: "exact", head: true })
-      .eq("status", "done"),
+      .not("opportunity_level", "is", null),
     supabase
       .from("content_items")
       .select("*", { count: "exact", head: true })
-      .gte("omega_score", 80),
+      .eq("opportunity_level", "alta"),
     supabase
       .from("content_items")
       .select("*", { count: "exact", head: true })
-      .eq("recommendation", "adaptar"),
+      .eq("opportunity_level", "moderada"),
+    supabase
+      .from("content_items")
+      .select("*", { count: "exact", head: true })
+      .eq("opportunity_level", "baixa"),
     supabase
       .from("scripts")
       .select("*", { count: "exact", head: true })
@@ -56,10 +59,11 @@ export default async function DashboardPage() {
     supabase
       .from("content_items")
       .select(
-        "id, caption, media_type, likes_count, comments_count, omega_score, recommendation, thumbnail_url, owner_username",
+        "id, caption, media_type, likes_count, comments_count, opportunity_level, opportunity_rank, recommendation, thumbnail_url, owner_username",
       )
-      .not("omega_score", "is", null)
-      .order("omega_score", { ascending: false })
+      .not("opportunity_level", "is", null)
+      .order("opportunity_rank", { ascending: false })
+      .order("collected_at", { ascending: false })
       .limit(6),
     supabase
       .from("scripts")
@@ -75,7 +79,8 @@ export default async function DashboardPage() {
     | "media_type"
     | "likes_count"
     | "comments_count"
-    | "omega_score"
+    | "opportunity_level"
+    | "opportunity_rank"
     | "recommendation"
     | "thumbnail_url"
     | "owner_username"
@@ -93,10 +98,10 @@ export default async function DashboardPage() {
       </div>
 
       <div className="flex flex-wrap gap-x-10 gap-y-4 rounded-lg border bg-card p-5">
-        <Stat label="Conteúdos encontrados" value={contentFound ?? 0} />
-        <Stat label="Conteúdos analisados" value={contentAnalyzed ?? 0} />
-        <Stat label="Alto potencial" value={highPotential ?? 0} />
-        <Stat label="Oportunidades para adaptar" value={opportunities ?? 0} />
+        <Stat label="🔥 Oportunidades encontradas" value={opportunitiesFound ?? 0} />
+        <Stat label="🟢 Alta oportunidade" value={highOpportunity ?? 0} />
+        <Stat label="🟡 Moderadas" value={moderateOpportunity ?? 0} />
+        <Stat label="🔴 Baixa oportunidade" value={lowOpportunity ?? 0} />
         <Stat label="Roteiros gerados (semana)" value={scriptsThisWeek ?? 0} />
       </div>
 
@@ -123,15 +128,13 @@ export default async function DashboardPage() {
                   />
                 )}
                 <div className="min-w-0 flex-1 space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs capitalize text-muted-foreground">
-                      {item.media_type}
-                      {item.owner_username ? ` · @${item.owner_username}` : ""}
-                    </span>
-                    {typeof item.omega_score === "number" && (
-                      <OmegaScore score={item.omega_score} size="sm" />
-                    )}
-                  </div>
+                  <span className="text-xs capitalize text-muted-foreground">
+                    {item.media_type}
+                    {item.owner_username ? ` · @${item.owner_username}` : ""}
+                  </span>
+                  {item.opportunity_level && (
+                    <OpportunityBadge level={item.opportunity_level} className="text-[0.65rem]" />
+                  )}
                   <p className="truncate text-sm font-medium">
                     {item.caption ?? "Sem legenda"}
                   </p>

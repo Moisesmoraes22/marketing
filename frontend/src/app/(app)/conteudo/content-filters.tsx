@@ -14,17 +14,24 @@ const TYPE_OPTIONS = [
   { value: "carousel", label: "Carrossel" },
 ];
 
-const POTENTIAL_OPTIONS = [
+const OPPORTUNITY_OPTIONS = [
+  { value: "all", label: "Todas" },
+  { value: "alta", label: "🟢 Alta" },
+  { value: "moderada", label: "🟡 Moderada" },
+  { value: "baixa", label: "🔴 Baixa" },
+];
+
+const RISK_OPTIONS = [
   { value: "all", label: "Todos" },
-  { value: "alto", label: "Alto" },
-  { value: "medio", label: "Médio" },
-  { value: "baixo", label: "Baixo" },
+  { value: "baixo", label: "🟢 Baixo" },
+  { value: "medio", label: "🟡 Médio" },
+  { value: "alto", label: "🔴 Alto" },
 ];
 
 const RECOMMENDATION_OPTIONS = [
   { value: "all", label: "Todas" },
   { value: "adaptar", label: "🟢 Adaptar" },
-  { value: "inspirar", label: "🟡 Inspirar-se" },
+  { value: "inspirar", label: "🟡 Inspirar" },
   { value: "ignorar", label: "🔴 Ignorar" },
 ];
 
@@ -46,7 +53,7 @@ const PERIOD_OPTIONS = [
 
 const SORT_OPTIONS = [
   { value: "recent", label: "Mais recentes" },
-  { value: "score", label: "Score" },
+  { value: "opportunity", label: "Oportunidade" },
   { value: "engagement", label: "Engajamento" },
 ];
 
@@ -109,7 +116,7 @@ export function ContentFilters() {
   }
 
   const hasActiveFilters =
-    ["type", "potential", "recommendation", "status", "period", "q", "favorite"].some(
+    ["type", "opportunity", "risk", "recommendation", "status", "period", "q", "favorite"].some(
       (key) => searchParams.get(key),
     ) || searchParams.get("sort");
 
@@ -131,10 +138,16 @@ export function ContentFilters() {
         options={TYPE_OPTIONS}
       />
       <Select
-        label="Potencial"
-        value={searchParams.get("potential") ?? "all"}
-        onChange={(v) => setParam("potential", v)}
-        options={POTENTIAL_OPTIONS}
+        label="Oportunidade"
+        value={searchParams.get("opportunity") ?? "all"}
+        onChange={(v) => setParam("opportunity", v)}
+        options={OPPORTUNITY_OPTIONS}
+      />
+      <Select
+        label="Risco"
+        value={searchParams.get("risk") ?? "all"}
+        onChange={(v) => setParam("risk", v)}
+        options={RISK_OPTIONS}
       />
       <Select
         label="Recomendação"

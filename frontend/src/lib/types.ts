@@ -30,7 +30,9 @@ export interface ContentItem {
   engagement_score: number;
   likes_count: number;
   comments_count: number;
-  omega_score: number | null;
+  opportunity_level: OpportunityLevel | null;
+  opportunity_rank: number | null;
+  risk_level: RiskLevel | null;
   recommendation: Recommendation | null;
   owner_username: string | null;
   is_favorite: boolean;
@@ -56,12 +58,16 @@ export interface AnalysisContent {
 
 export type Recommendation = "adaptar" | "inspirar" | "ignorar";
 export type RiskLevel = "baixo" | "medio" | "alto";
+export type OpportunityLevel = "alta" | "moderada" | "baixa";
+export type Level5 = "muito_baixa" | "baixa" | "media" | "alta" | "muito_alta";
+export type Level5Masc = "muito_baixo" | "baixo" | "medio" | "alto" | "muito_alto";
 
 export interface CritiqueContent {
-  virality_score: number;
-  relevance_score: number;
-  commercial_score: number;
-  adaptation_score: number;
+  opportunity_level: OpportunityLevel;
+  viralidade: Level5;
+  relevancia: Level5;
+  potencial_comercial: Level5Masc;
+  adaptabilidade: Level5;
   risk_level: RiskLevel;
   risks: string[];
   recommendation: Recommendation;
@@ -79,7 +85,7 @@ export const RECOMMENDATION_META: Record<
       "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400",
   },
   inspirar: {
-    label: "Inspirar-se",
+    label: "Inspirar",
     emoji: "🟡",
     className:
       "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
@@ -89,6 +95,51 @@ export const RECOMMENDATION_META: Record<
     emoji: "🔴",
     className: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400",
   },
+};
+
+export const OPPORTUNITY_META: Record<
+  OpportunityLevel,
+  { label: string; emoji: string; className: string }
+> = {
+  alta: {
+    label: "Alta oportunidade",
+    emoji: "🟢",
+    className:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400",
+  },
+  moderada: {
+    label: "Oportunidade moderada",
+    emoji: "🟡",
+    className:
+      "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
+  },
+  baixa: {
+    label: "Baixa oportunidade",
+    emoji: "🔴",
+    className: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400",
+  },
+};
+
+export const RISK_META: Record<RiskLevel, { label: string; emoji: string }> = {
+  baixo: { label: "Baixo", emoji: "🟢" },
+  medio: { label: "Médio", emoji: "🟡" },
+  alto: { label: "Alto", emoji: "🔴" },
+};
+
+export const LEVEL5_LABEL: Record<Level5, string> = {
+  muito_baixa: "Muito baixa",
+  baixa: "Baixa",
+  media: "Média",
+  alta: "Alta",
+  muito_alta: "Muito alta",
+};
+
+export const LEVEL5_MASC_LABEL: Record<Level5Masc, string> = {
+  muito_baixo: "Muito baixo",
+  baixo: "Baixo",
+  medio: "Médio",
+  alto: "Alto",
+  muito_alto: "Muito alto",
 };
 
 export interface AnalysisRow {

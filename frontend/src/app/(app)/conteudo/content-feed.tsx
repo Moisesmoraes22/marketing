@@ -17,7 +17,8 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/lib/types";
-import { OmegaScore, RecommendationBadge } from "@/components/omega-score";
+import { OPPORTUNITY_META } from "@/lib/types";
+import { OpportunityBadge, RecommendationBadge } from "@/components/opportunity";
 import { StatusBadge } from "./status-badge";
 import { VideoPlayer } from "./video-player";
 import { deleteContentItems, toggleFavorite } from "./actions";
@@ -59,7 +60,8 @@ export function ContentFeed({
         (payload) => {
           const hasFilters = [
             "type",
-            "potential",
+            "opportunity",
+            "risk",
             "recommendation",
             "status",
             "period",
@@ -244,14 +246,9 @@ export function ContentFeed({
                     {previewItem.is_favorite ? "Inspiração salva" : "Salvar inspiração"}
                   </Button>
                 </div>
-                {typeof previewItem.omega_score === "number" && (
-                  <div className="flex items-center gap-3 rounded-md border bg-muted/40 px-3 py-2">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Score Ômega
-                      </p>
-                      <OmegaScore score={previewItem.omega_score} />
-                    </div>
+                {previewItem.opportunity_level && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+                    <OpportunityBadge level={previewItem.opportunity_level} />
                     {previewItem.recommendation && (
                       <RecommendationBadge recommendation={previewItem.recommendation} />
                     )}
@@ -374,9 +371,9 @@ function ContentTile({
           {selected && <Check className="h-3 w-3" />}
         </div>
       )}
-      {typeof item.omega_score === "number" && (
-        <div className="absolute right-1.5 top-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[0.65rem] font-semibold text-white">
-          {item.omega_score}
+      {item.opportunity_level && (
+        <div className="absolute right-1.5 top-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[0.7rem]">
+          {OPPORTUNITY_META[item.opportunity_level].emoji}
         </div>
       )}
       {!selectMode && (

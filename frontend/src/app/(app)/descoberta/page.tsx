@@ -7,7 +7,8 @@ const PAGE_SIZE = 12;
 type ContentSearchParams = {
   page?: string;
   type?: string;
-  potential?: string;
+  opportunity?: string;
+  risk?: string;
   recommendation?: string;
   status?: string;
   period?: string;
@@ -39,9 +40,8 @@ export default async function DescobertaPage({
   if (params.type) query = query.eq("media_type", params.type);
   if (params.status) query = query.eq("status", params.status);
   if (params.recommendation) query = query.eq("recommendation", params.recommendation);
-  if (params.potential === "alto") query = query.gte("omega_score", 80);
-  else if (params.potential === "medio") query = query.gte("omega_score", 50).lt("omega_score", 80);
-  else if (params.potential === "baixo") query = query.lt("omega_score", 50);
+  if (params.opportunity) query = query.eq("opportunity_level", params.opportunity);
+  if (params.risk) query = query.eq("risk_level", params.risk);
   if (params.period && PERIOD_TO_MS[params.period]) {
     query = query.gte(
       "collected_at",
@@ -51,8 +51,8 @@ export default async function DescobertaPage({
   if (params.q) query = query.ilike("caption", `%${params.q}%`);
   if (params.favorite === "1") query = query.eq("is_favorite", true);
 
-  if (params.sort === "score") {
-    query = query.order("omega_score", { ascending: false, nullsFirst: false });
+  if (params.sort === "opportunity") {
+    query = query.order("opportunity_rank", { ascending: false, nullsFirst: false });
   } else if (params.sort === "engagement") {
     query = query.order("engagement_score", { ascending: false });
   } else {

@@ -4,7 +4,7 @@ import { ArrowLeft, Heart, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OmegaScore, RecommendationBadge } from "@/components/omega-score";
+import { OpportunityBadge, RecommendationBadge, RiskBadge } from "@/components/opportunity";
 import { createClient } from "@/lib/supabase/server";
 import type {
   AnalysisContent,
@@ -13,29 +13,17 @@ import type {
   CritiqueContent,
   TranscriptionContent,
 } from "@/lib/types";
+import { LEVEL5_LABEL, LEVEL5_MASC_LABEL } from "@/lib/types";
 import { StatusBadge } from "../status-badge";
 import { VideoPlayer } from "../video-player";
 
-const RISK_LABEL: Record<string, string> = {
-  baixo: "Baixo",
-  medio: "Médio",
-  alto: "Alto",
-};
-
-function SubScore({ label, value }: { label: string; value: number | undefined }) {
-  if (typeof value !== "number") return null;
+function Pillar({ emoji, label, value }: { emoji: string; label: string; value: string }) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium tabular-nums">{value}</span>
-      </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-primary"
-          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-        />
-      </div>
+    <div className="rounded-lg border p-3">
+      <p className="text-xs text-muted-foreground">
+        {emoji} {label}
+      </p>
+      <p className="font-medium">{value}</p>
     </div>
   );
 }
@@ -88,11 +76,11 @@ export default async function ContentDetailPage({
           </Badge>
           <StatusBadge status={contentItem.status} />
         </div>
-        {typeof contentItem.omega_score === "number" && (
-          <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-2">
-            <div className="text-right">
-              <p className="text-xs font-medium text-muted-foreground">Score Ômega</p>
-              <OmegaScore score={contentItem.omega_score} size="lg" />
+        {contentItem.opportunity_level && (
+          <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">🧠 Oportunidade Ômega</p>
+              <OpportunityBadge level={contentItem.opportunity_level} />
             </div>
             {contentItem.recommendation && (
               <RecommendationBadge recommendation={contentItem.recommendation} />
@@ -212,35 +200,53 @@ export default async function ContentDetailPage({
       {critique && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">🎯 Aplicabilidade para Ômega</CardTitle>
+            <CardTitle className="text-base">🧠 Oportunidade Ômega</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3">
-              <RecommendationBadge recommendation={critique.recommendation} />
-              {critique.risk_level && (
-                <Badge variant="outline">Risco: {RISK_LABEL[critique.risk_level]}</Badge>
-              )}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <SubScore label="Viralidade" value={critique.virality_score} />
-              <SubScore label="Relevância" value={critique.relevance_score} />
-              <SubScore label="Potencial comercial" value={critique.commercial_score} />
-              <SubScore label="Adaptação" value={critique.adaptation_score} />
-            </div>
-            {critique.risks.length > 0 && (
-              <div>
-                <p className="font-medium">Riscos</p>
-                <ul className="list-inside list-disc text-muted-foreground">
-                  {critique.risks.map((risk) => (
-                    <li key={risk}>{risk}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          <CardContent className="space-y-5 text-sm">
+            <OpportunityBadge level={critique.opportunity_level} className="text-sm" />
+
             <div>
-              <p className="font-medium">Justificativa</p>
+              <p className="mb-1 font-medium">Por quê?</p>
               <p className="text-muted-foreground">{critique.justification}</p>
             </div>
+
+            <div>
+              <p className="mb-2 font-medium">🔎 Análise</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Pillar emoji="🔥" label="Viralidade" value={LEVEL5_LABEL[critique.viralidade]} />
+                <Pillar
+                  emoji="🎯"
+                  label="Relevância para Ômega"
+                  value={LEVEL5_LABEL[critique.relevancia]}
+                />
+                <Pillar
+                  emoji="💰"
+                  label="Potencial comercial"
+                  value={LEVEL5_MASC_LABEL[critique.potencial_comercial]}
+                />
+                <Pillar
+                  emoji="🛠️"
+                  label="Adaptabilidade"
+                  value={LEVEL5_LABEL[critique.adaptabilidade]}
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-1.5 font-medium">⚠️ Risco</p>
+              <RiskBadge level={critique.risk_level} />
+              <p className="mt-1.5 text-muted-foreground">
+                {critique.risks.length > 0
+                  ? critique.risks.join(" · ")
+                  : "Não foram identificados riscos relevantes para adaptação."}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-1.5 font-medium">💡 Recomendação</p>
+              <RecommendationBadge recommendation={critique.recommendation} />
+            </div>
+
             <Button
               nativeButton={false}
               render={<Link href={`/roteiros/novo?content_item_id=${contentItem.id}`} />}

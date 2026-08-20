@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OmegaScore } from "@/components/omega-score";
+import { OpportunityBadge } from "@/components/opportunity";
 import { cn } from "@/lib/utils";
 import type {
   ContentItem,
@@ -175,8 +175,8 @@ export function NewScriptForm({
                 <span className="min-w-0 flex-1 truncate text-sm">
                   {item.caption ?? item.source_url}
                 </span>
-                {typeof item.omega_score === "number" && (
-                  <OmegaScore score={item.omega_score} size="sm" />
+                {item.opportunity_level && (
+                  <OpportunityBadge level={item.opportunity_level} className="text-[0.65rem]" />
                 )}
               </button>
             ))}
