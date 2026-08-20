@@ -119,7 +119,13 @@ create table public.content_items (
   video_url text,
   collected_at timestamptz not null default now(),
   status text not null default 'collected'
-    check (status in ('collected', 'transcribing', 'analyzing', 'done', 'error'))
+    check (status in ('collected', 'transcribing', 'analyzing', 'done', 'error')),
+  -- deduplicação (o mesmo conteúdo do Instagram nunca deve virar 2 registros)
+  instagram_media_id text,
+  source_url_normalized text,
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  discovery_count int not null default 1
 );
 
 alter table public.content_items enable row level security;
@@ -132,6 +138,43 @@ create policy "content_items: leitura/escrita para o time autenticado"
 
 -- status em tempo real na página /conteudo (Fase 2)
 alter publication supabase_realtime add table public.content_items;
+
+create unique index content_items_instagram_media_id_key
+  on public.content_items (instagram_media_id)
+  where instagram_media_id is not null;
+
+create unique index content_items_source_url_normalized_key
+  on public.content_items (source_url_normalized)
+  where source_url_normalized is not null;
+
+-- =========================================================
+-- content_sources (por quais buscas cada conteúdo foi encontrado)
+-- =========================================================
+create table public.content_sources (
+  id uuid primary key default gen_random_uuid(),
+  content_id uuid not null references public.content_items (id) on delete cascade,
+  search_id uuid references public.searches (id) on delete set null,
+  found_at timestamptz not null default now(),
+  unique (content_id, search_id)
+);
+
+alter table public.content_sources enable row level security;
+
+create policy "content_sources: leitura/escrita para o time autenticado"
+  on public.content_sources for all
+  to authenticated
+  using (true)
+  with check (true);
+
+create or replace function public.increment_content_discovery(p_content_id uuid)
+returns void
+language sql
+as $$
+  update public.content_items
+  set discovery_count = discovery_count + 1,
+      last_seen_at = now()
+  where id = p_content_id;
+$$;
 
 -- =========================================================
 -- analyses
@@ -192,7 +235,8 @@ create table public.jobs (
   error_message text,
   created_at timestamptz not null default now(),
   started_at timestamptz,
-  finished_at timestamptz
+  finished_at timestamptz,
+  result jsonb
 );
 
 create index jobs_status_created_at_idx on public.jobs (status, created_at);

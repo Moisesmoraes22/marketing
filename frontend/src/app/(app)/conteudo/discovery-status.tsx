@@ -13,6 +13,7 @@ interface DiscoverJob {
   error_message: string | null;
   started_at: string | null;
   created_at: string;
+  result: { found: number; new: number; duplicates: number } | null;
 }
 
 interface DiscoverStats {
@@ -49,7 +50,7 @@ export function DiscoveryStatus() {
 
     supabase
       .from("jobs")
-      .select("id, status, payload, error_message, started_at, created_at")
+      .select("id, status, payload, error_message, started_at, created_at, result")
       .eq("type", "discover")
       .in("status", ["pending", "running"])
       .then(({ data }) => {
@@ -85,7 +86,11 @@ export function DiscoveryStatus() {
             } else {
               if (next.has(job.id)) {
                 if (job.status === "done") {
-                  toast.success("Busca concluída ✅");
+                  toast.success(
+                    job.result
+                      ? `Busca concluída ✅ — ${job.result.new} novo(s), ${job.result.duplicates} já conhecido(s)`
+                      : "Busca concluída ✅",
+                  );
                 } else if (job.status === "cancelled") {
                   toast("Busca cancelada");
                 } else {

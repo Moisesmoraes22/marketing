@@ -40,6 +40,18 @@ export interface ContentItem {
   video_url: string | null;
   collected_at: string;
   status: ContentStatus;
+  instagram_media_id: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  discovery_count: number;
+}
+
+export interface ContentSource {
+  id: string;
+  content_id: string;
+  search_id: string | null;
+  found_at: string;
+  searches: { name: string } | null;
 }
 
 export type AnalysisType = "transcription" | "analysis" | "critique";

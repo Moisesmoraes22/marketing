@@ -391,7 +391,17 @@ function ContentTile({
         </button>
       )}
       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-1.5">
-        <StatusBadge status={item.status} className="text-[0.65rem]" />
+        <div className="flex items-center gap-1">
+          <StatusBadge status={item.status} className="text-[0.65rem]" />
+          {item.discovery_count > 1 && (
+            <span
+              className="text-[0.65rem] font-medium text-white"
+              title={`Encontrado em ${item.discovery_count} buscas`}
+            >
+              🔎 {item.discovery_count}x
+            </span>
+          )}
+        </div>
         <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-medium text-white">
           <Heart className="h-3 w-3" />
           {item.likes_count.toLocaleString("pt-BR")}

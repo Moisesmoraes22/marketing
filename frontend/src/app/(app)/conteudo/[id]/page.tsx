@@ -10,6 +10,7 @@ import type {
   AnalysisContent,
   AnalysisRow,
   ContentItem,
+  ContentSource,
   CritiqueContent,
   TranscriptionContent,
 } from "@/lib/types";
@@ -36,19 +37,25 @@ export default async function ContentDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: item }, { data: analysesData }] = await Promise.all([
+  const [{ data: item }, { data: analysesData }, { data: sourcesData }] = await Promise.all([
     supabase.from("content_items").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("analyses")
       .select("*")
       .eq("content_item_id", id)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("content_sources")
+      .select("id, content_id, search_id, found_at, searches(name)")
+      .eq("content_id", id)
+      .order("found_at", { ascending: false }),
   ]);
 
   if (!item) notFound();
 
   const contentItem = item as ContentItem;
   const analyses = (analysesData ?? []) as AnalysisRow[];
+  const sources = (sourcesData ?? []) as unknown as ContentSource[];
 
   const transcription = analyses.find((a) => a.type === "transcription")
     ?.content as TranscriptionContent | undefined;
@@ -75,6 +82,9 @@ export default async function ContentDetailPage({
             {contentItem.media_type}
           </Badge>
           <StatusBadge status={contentItem.status} />
+          {contentItem.discovery_count > 1 && (
+            <Badge variant="outline">🔎 Encontrado em {contentItem.discovery_count} ocasiões</Badge>
+          )}
         </div>
         {contentItem.opportunity_level && (
           <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2">
@@ -125,6 +135,39 @@ export default async function ContentDetailPage({
           </a>
         </CardContent>
       </Card>
+
+      {sources.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              🔎 Descoberto através de {sources.length}{" "}
+              {sources.length === 1 ? "busca" : "buscas"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="flex flex-wrap gap-1.5">
+              {sources.map((source) => (
+                <Badge key={source.id} variant="secondary" className="font-normal">
+                  {source.searches?.name ?? "busca removida"}
+                </Badge>
+              ))}
+            </div>
+            <div>
+              <p className="mb-1.5 font-medium">Histórico de descoberta</p>
+              <ul className="space-y-1.5 text-muted-foreground">
+                {sources.map((source) => (
+                  <li key={source.id} className="flex items-center justify-between gap-2">
+                    <span>{source.searches?.name ?? "busca removida"}</span>
+                    <span className="text-xs">
+                      {new Date(source.found_at).toLocaleString("pt-BR")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {transcription && (
         <Card>
