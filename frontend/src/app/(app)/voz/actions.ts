@@ -52,7 +52,7 @@ export async function saveVoiceProfile(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath("/voz");
+  revalidatePath("/roteiros");
 }
 
 export async function generateCalibrationDraft(voiceProfileId: string) {
@@ -88,7 +88,7 @@ export async function generateCalibrationDraft(voiceProfileId: string) {
 
   if (jobError) throw new Error(jobError.message);
 
-  revalidatePath("/voz");
+  revalidatePath("/roteiros");
 }
 
 export async function submitCalibrationFeedback(
@@ -129,5 +129,5 @@ export async function submitCalibrationFeedback(
     .eq("id", voiceProfileId);
   if (updateError) throw new Error(updateError.message);
 
-  revalidatePath("/voz");
+  revalidatePath("/roteiros");
 }
