@@ -1,6 +1,9 @@
 import Groq from "groq-sdk";
 
-export const CHAT_MODEL = "llama-3.3-70b-versatile";
+// llama-3.3-70b-versatile foi descontinuado no Groq (modelos rotacionam com
+// frequência lá). openai/gpt-oss-120b é o substituto atual mais próximo em
+// capacidade — ver GET https://api.groq.com/openai/v1/models pra lista atual.
+export const CHAT_MODEL = "openai/gpt-oss-120b";
 
 let client: Groq | null = null;
 
