@@ -35,6 +35,20 @@ export async function POST(
     return NextResponse.json({ error: "busca não encontrada" }, { status: 404 });
   }
 
+  const { data: existingJob } = await supabase
+    .from("jobs")
+    .select("id, status")
+    .eq("type", "discover")
+    .eq("payload->>search_id", id)
+    .in("status", ["pending", "running"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingJob) {
+    return NextResponse.json({ job_id: existingJob.id, queued: true });
+  }
+
   const { data: job, error: jobError } = await supabase
     .from("jobs")
     .insert({

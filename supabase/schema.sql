@@ -203,6 +203,8 @@ create policy "jobs: leitura/escrita para o time autenticado"
   using (true)
   with check (true);
 
+alter publication supabase_realtime add table public.jobs;
+
 -- o worker acessa esta tabela com a service_role key, que ignora RLS.
 
 -- =========================================================

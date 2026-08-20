@@ -13,6 +13,7 @@ import { NewSearchForm } from "./new-search-form";
 import { SearchList } from "./search-list";
 import { ContentFeed } from "../conteudo/content-feed";
 import { ContentFilters } from "../conteudo/content-filters";
+import { DiscoveryStatus } from "../conteudo/discovery-status";
 import { ProcessingBanner } from "../conteudo/processing-banner";
 
 export function DescobertaTabs({
@@ -48,6 +49,7 @@ export function DescobertaTabs({
         <p className="text-sm text-muted-foreground">
           Feed de posts coletados com status do pipeline em tempo real.
         </p>
+        <DiscoveryStatus />
         <ContentFilters />
         <ProcessingBanner />
         <ContentFeed initialItems={content} page={page} pageCount={pageCount} />

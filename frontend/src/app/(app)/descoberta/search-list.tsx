@@ -113,7 +113,11 @@ function SearchCard({ search, onRun }: { search: Search; onRun?: () => void }) {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "falha ao executar busca");
-      toast.success("Busca disparada — acompanhe o progresso em Conteúdo");
+      toast.success(
+        body.queued
+          ? "Essa busca já está na fila — aguarde terminar antes de rodar de novo"
+          : "Busca disparada — acompanhe o progresso em Conteúdo",
+      );
       onRun?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao executar busca");
