@@ -96,6 +96,12 @@ export function ContentFeed({
     });
   }
 
+  const allSelected = items.length > 0 && selected.size === items.length;
+
+  function toggleSelectAll() {
+    setSelected(allSelected ? new Set() : new Set(items.map((item) => item.id)));
+  }
+
   function handleDelete() {
     if (selected.size === 0) return;
     if (!window.confirm(`Excluir ${selected.size} item(ns) selecionado(s)? Essa ação não pode ser desfeita.`)) {
@@ -125,13 +131,20 @@ export function ContentFeed({
   return (
     <>
       <div className="flex items-center justify-between gap-2">
-        <Button
-          size="sm"
-          variant={selectMode ? "default" : "outline"}
-          onClick={toggleSelectMode}
-        >
-          {selectMode ? "Cancelar seleção" : "Selecionar"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant={selectMode ? "default" : "outline"}
+            onClick={toggleSelectMode}
+          >
+            {selectMode ? "Cancelar seleção" : "Selecionar"}
+          </Button>
+          {selectMode && (
+            <Button size="sm" variant="outline" onClick={toggleSelectAll}>
+              {allSelected ? "Desmarcar todos" : "Selecionar todos"}
+            </Button>
+          )}
+        </div>
         {selectMode && selected.size > 0 && (
           <Button
             size="sm"
@@ -140,7 +153,11 @@ export function ContentFeed({
             disabled={isDeleting}
           >
             <Trash2 className="h-4 w-4" />
-            {isDeleting ? "Excluindo..." : `Excluir (${selected.size})`}
+            {isDeleting
+              ? "Excluindo..."
+              : allSelected
+                ? `Excluir todos (${selected.size})`
+                : `Excluir (${selected.size})`}
           </Button>
         )}
       </div>
