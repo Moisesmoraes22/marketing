@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,6 @@ export function SearchList({ searches }: { searches: Search[] }) {
 function SearchCard({ search }: { search: Search }) {
   const [running, setRunning] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
 
   async function handleRun() {
     setRunning(true);
@@ -47,8 +45,7 @@ function SearchCard({ search }: { search: Search }) {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "falha ao executar busca");
-      toast.success("Busca disparada — acompanhe em Conteúdo");
-      router.push("/conteudo");
+      toast.success("Busca disparada — acompanhe o progresso logo abaixo");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao executar busca");
     } finally {

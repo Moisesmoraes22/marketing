@@ -7,9 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   LayoutDashboard,
   Search,
-  FileStack,
   ScrollText,
-  Mic,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -25,9 +23,7 @@ import {
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/descoberta", label: "Descoberta", icon: Search },
-  { href: "/conteudo", label: "Conteúdo", icon: FileStack },
   { href: "/roteiros", label: "Roteiros", icon: ScrollText },
-  { href: "/voz", label: "Voz da Marca", icon: Mic },
 ] as const;
 
 function Logo({ collapsed }: { collapsed: boolean }) {

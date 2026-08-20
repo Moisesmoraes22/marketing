@@ -76,7 +76,6 @@ export async function createSearch(formData: FormData) {
   if (jobError) throw new Error(jobError.message);
 
   revalidatePath("/descoberta");
-  revalidatePath("/conteudo");
 }
 
 const idSchema = z.string().uuid();

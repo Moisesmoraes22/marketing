@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +10,6 @@ import { createSearch } from "./actions";
 
 export function NewSearchForm() {
   const formRef = useRef<HTMLFormElement>(null);
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
@@ -37,8 +35,7 @@ export function NewSearchForm() {
       try {
         await createSearch(formData);
         formRef.current?.reset();
-        toast.success("Busca criada e disparada — acompanhe o resultado em Conteúdo");
-        router.push("/conteudo");
+        toast.success("Busca disparada — acompanhe o progresso logo abaixo");
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Falha ao criar busca");
       }

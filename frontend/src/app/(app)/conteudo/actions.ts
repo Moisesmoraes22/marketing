@@ -18,5 +18,5 @@ export async function deleteContentItems(ids: string[]) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath("/conteudo");
+  revalidatePath("/descoberta");
 }

@@ -54,11 +54,11 @@ export default async function ContentDetailPage({
   return (
     <div className="space-y-6">
       <Link
-        href="/conteudo"
+        href="/descoberta"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Voltar para Conteúdo
+        Voltar
       </Link>
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-semibold">Conteúdo</h1>

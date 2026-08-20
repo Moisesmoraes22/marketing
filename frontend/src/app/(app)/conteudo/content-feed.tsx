@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ export function ContentFeed({
   pageCount: number;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const instanceId = useId();
   const [items, setItems] = useState(initialItems);
   const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
@@ -79,7 +80,7 @@ export function ContentFeed({
   }, [page]);
 
   function goToPage(next: number) {
-    router.push(`/conteudo?page=${next}`);
+    router.push(`${pathname}?page=${next}`);
   }
 
   function toggleSelectMode() {
