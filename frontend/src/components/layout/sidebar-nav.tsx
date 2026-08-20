@@ -9,7 +9,6 @@ import {
   FileStack,
   ScrollText,
   Mic,
-  Settings,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -18,7 +17,6 @@ const NAV_ITEMS = [
   { href: "/conteudo", label: "Conteúdo", icon: FileStack },
   { href: "/roteiros", label: "Roteiros", icon: ScrollText },
   { href: "/voz", label: "Voz da Marca", icon: Mic },
-  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
 
 export function SidebarNav({ className }: { className?: string }) {

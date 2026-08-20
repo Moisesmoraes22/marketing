@@ -10,5 +10,5 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# local agent settings
-.claude/settings.local.json
+# local agent settings/state
+.claude/

@@ -22,7 +22,9 @@ export default async function RoteirosPage() {
             Biblioteca de roteiros gerados a partir de conteúdo analisado.
           </p>
         </div>
-        <Button render={<Link href="/roteiros/novo" />}>Novo roteiro</Button>
+        <Button nativeButton={false} render={<Link href="/roteiros/novo" />}>
+          Novo roteiro
+        </Button>
       </div>
       <ScriptLibrary initialScripts={scripts} />
     </div>

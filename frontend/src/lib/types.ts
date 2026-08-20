@@ -27,6 +27,7 @@ export interface ContentItem {
   media_type: MediaType;
   engagement_score: number;
   thumbnail_url: string | null;
+  video_url: string | null;
   collected_at: string;
   status: ContentStatus;
 }

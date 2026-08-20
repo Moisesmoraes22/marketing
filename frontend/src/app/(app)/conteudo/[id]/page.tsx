@@ -10,6 +10,7 @@ import type {
   TranscriptionContent,
 } from "@/lib/types";
 import { StatusBadge } from "../status-badge";
+import { VideoPlayer } from "../video-player";
 
 const RECOMMENDATION_LABEL: Record<CritiqueContent["recommendation"], string> = {
   adaptar: "Adaptar",
@@ -62,7 +63,14 @@ export default async function ContentDetailPage({
         <CardHeader>
           <CardTitle className="text-base">Post original</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+        <CardContent className="space-y-3 text-sm">
+          <div className="max-w-xs">
+            <VideoPlayer
+              videoUrl={contentItem.video_url}
+              thumbnailUrl={contentItem.thumbnail_url}
+              caption={contentItem.caption}
+            />
+          </div>
           <p className="text-muted-foreground">{contentItem.caption ?? "Sem legenda"}</p>
           <a
             href={contentItem.source_url}

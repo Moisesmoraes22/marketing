@@ -31,6 +31,7 @@ interface ApifyPost {
   likesCount?: number;
   commentsCount?: number;
   displayUrl?: string;
+  videoUrl?: string;
 }
 
 function isDiscoveryPayload(payload: unknown): payload is DiscoveryPayload {
@@ -162,6 +163,7 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
         media_type: mediaType,
         engagement_score: (post.likesCount ?? 0) + (post.commentsCount ?? 0),
         thumbnail_url: post.displayUrl ?? null,
+        video_url: post.videoUrl ?? null,
         status: "collected",
       })
       .select("id")

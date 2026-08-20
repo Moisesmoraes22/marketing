@@ -87,6 +87,7 @@ create table public.content_items (
   media_type text not null check (media_type in ('post', 'carousel', 'reel')),
   engagement_score int not null default 0,
   thumbnail_url text,
+  video_url text,
   collected_at timestamptz not null default now(),
   status text not null default 'collected'
     check (status in ('collected', 'transcribing', 'analyzing', 'done', 'error'))
