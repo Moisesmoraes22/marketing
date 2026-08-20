@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import type { ScriptFormat } from "@/lib/types";
+import type { ScriptFormat, ScriptObjective, ScriptStyle } from "@/lib/types";
 
 const idSchema = z.string().uuid();
 const formatSchema = z.enum([
@@ -13,11 +13,31 @@ const formatSchema = z.enum([
   "carousel",
   "static_post",
 ]);
+const objectiveSchema = z.enum([
+  "vender",
+  "engajar",
+  "educar",
+  "atrair_seguidores",
+  "fortalecer_marca",
+]);
+const styleSchema = z.enum(["viral", "educativo", "comercial", "storytelling", "humor"]);
 
-export async function requestScript(contentItemId: string, format: ScriptFormat) {
+export async function requestScript(
+  contentItemId: string,
+  format: ScriptFormat,
+  objective: ScriptObjective,
+  style: ScriptStyle,
+) {
   const parsedId = idSchema.safeParse(contentItemId);
   const parsedFormat = formatSchema.safeParse(format);
-  if (!parsedId.success || !parsedFormat.success) {
+  const parsedObjective = objectiveSchema.safeParse(objective);
+  const parsedStyle = styleSchema.safeParse(style);
+  if (
+    !parsedId.success ||
+    !parsedFormat.success ||
+    !parsedObjective.success ||
+    !parsedStyle.success
+  ) {
     throw new Error("dados inválidos");
   }
 
@@ -40,6 +60,8 @@ export async function requestScript(contentItemId: string, format: ScriptFormat)
       content_item_id: contentItemId,
       format,
       voice_profile_id: profile.id,
+      objective,
+      style,
     },
     status: "pending",
   });

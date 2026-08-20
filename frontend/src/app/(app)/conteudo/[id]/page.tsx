@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Heart, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OmegaScore, RecommendationBadge } from "@/components/omega-score";
 import { createClient } from "@/lib/supabase/server";
@@ -240,6 +241,12 @@ export default async function ContentDetailPage({
               <p className="font-medium">Justificativa</p>
               <p className="text-muted-foreground">{critique.justification}</p>
             </div>
+            <Button
+              nativeButton={false}
+              render={<Link href={`/roteiros/novo?content_item_id=${contentItem.id}`} />}
+            >
+              ✨ Gerar conteúdo
+            </Button>
           </CardContent>
         </Card>
       )}

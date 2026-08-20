@@ -116,6 +116,31 @@ export type ScriptFormat =
   | "carousel"
   | "static_post";
 
+export type ScriptObjective =
+  | "vender"
+  | "engajar"
+  | "educar"
+  | "atrair_seguidores"
+  | "fortalecer_marca";
+
+export type ScriptStyle = "viral" | "educativo" | "comercial" | "storytelling" | "humor";
+
+export const OBJECTIVE_LABEL: Record<ScriptObjective, string> = {
+  vender: "Vender",
+  engajar: "Engajar",
+  educar: "Educar",
+  atrair_seguidores: "Atrair seguidores",
+  fortalecer_marca: "Fortalecer marca",
+};
+
+export const STYLE_LABEL: Record<ScriptStyle, string> = {
+  viral: "Viral",
+  educativo: "Educativo",
+  comercial: "Comercial",
+  storytelling: "Storytelling",
+  humor: "Humor",
+};
+
 export interface CarouselSlide {
   slide_number: number;
   headline: string;

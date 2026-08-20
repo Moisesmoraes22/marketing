@@ -21,10 +21,36 @@ type ScriptFormat =
   | "carousel"
   | "static_post";
 
+type Objective =
+  | "vender"
+  | "engajar"
+  | "educar"
+  | "atrair_seguidores"
+  | "fortalecer_marca";
+type Style = "viral" | "educativo" | "comercial" | "storytelling" | "humor";
+
+const OBJECTIVE_LABEL: Record<Objective, string> = {
+  vender: "Vender",
+  engajar: "Engajar",
+  educar: "Educar",
+  atrair_seguidores: "Atrair seguidores",
+  fortalecer_marca: "Fortalecer marca",
+};
+
+const STYLE_LABEL: Record<Style, string> = {
+  viral: "Viral",
+  educativo: "Educativo",
+  comercial: "Comercial",
+  storytelling: "Storytelling",
+  humor: "Humor",
+};
+
 interface ScriptGeneratorPayload {
   content_item_id: string;
   format: ScriptFormat;
   voice_profile_id: string;
+  objective?: Objective;
+  style?: Style;
 }
 
 interface VoiceProfile {
@@ -58,10 +84,18 @@ function outputShapeFor(format: ScriptFormat): string {
   return `{ hook: string, body_segments: string[], cta: string, caption: string, hashtags: string[] }`;
 }
 
-function buildSystemPrompt(format: ScriptFormat, voiceProfile: VoiceProfile): string {
+function buildSystemPrompt(
+  format: ScriptFormat,
+  voiceProfile: VoiceProfile,
+  objective?: Objective,
+  style?: Style,
+): string {
   return `Você é um especialista em criação de conteúdo para Instagram. Use o perfil de voz fornecido abaixo
 para criar o conteúdo — nunca copie o original, inspire-se apenas na estrutura e nos gatilhos identificados.
 O resultado deve soar 100% como a voz descrita.
+
+OBJETIVO DO CONTEÚDO: ${objective ? OBJECTIVE_LABEL[objective] : "não informado"}
+ESTILO: ${style ? STYLE_LABEL[style] : "não informado"}
 
 PERFIL DE VOZ:
 Público-alvo: ${voiceProfile.target_audience ?? "não informado"}
@@ -78,7 +112,7 @@ export async function runScriptGeneratorAgent(job: Job): Promise<void> {
     throw new Error("payload inválido para job de geração de roteiro");
   }
 
-  const { content_item_id, format, voice_profile_id } = job.payload;
+  const { content_item_id, format, voice_profile_id, objective, style } = job.payload;
 
   const [{ data: analysis }, { data: critique }, { data: voiceProfile, error: voiceError }] =
     await Promise.all([
@@ -105,7 +139,12 @@ export async function runScriptGeneratorAgent(job: Job): Promise<void> {
     throw new Error(voiceError?.message ?? "perfil de voz não encontrado");
   }
 
-  const systemPrompt = buildSystemPrompt(format, voiceProfile as VoiceProfile);
+  const systemPrompt = buildSystemPrompt(
+    format,
+    voiceProfile as VoiceProfile,
+    objective,
+    style,
+  );
   const userContent = JSON.stringify({ analysis: analysis?.content, critique: critique?.content });
 
   const result = await completeJson<Record<string, unknown>>(systemPrompt, userContent);
