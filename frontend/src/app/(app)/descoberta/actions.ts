@@ -30,19 +30,40 @@ export async function createSearch(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos");
   }
 
+  if (parsed.data.hashtags.length === 0 && parsed.data.accounts.length === 0) {
+    throw new Error("Informe ao menos uma hashtag ou conta para buscar");
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { error } = await supabase.from("searches").insert({
-    ...parsed.data,
-    created_by: user?.id ?? null,
-  });
+  const { data: search, error } = await supabase
+    .from("searches")
+    .insert({
+      ...parsed.data,
+      created_by: user?.id ?? null,
+    })
+    .select("id, hashtags, accounts, min_engagement")
+    .single();
 
   if (error) throw new Error(error.message);
 
+  const { error: jobError } = await supabase.from("jobs").insert({
+    type: "discover",
+    payload: {
+      search_id: search.id,
+      hashtags: search.hashtags,
+      accounts: search.accounts,
+      min_engagement: search.min_engagement,
+    },
+    status: "pending",
+  });
+  if (jobError) throw new Error(jobError.message);
+
   revalidatePath("/descoberta");
+  revalidatePath("/conteudo");
 }
 
 const idSchema = z.string().uuid();
