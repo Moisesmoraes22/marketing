@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { inviteMember } from "./actions";
+import { inviteMember, updateMemberAsAdmin } from "./actions";
 
 interface Profile {
   id: string;
@@ -141,46 +142,53 @@ export function TeamSection({
               <SheetHeader className="p-0">
                 <SheetTitle>{selected.name ?? selected.email}</SheetTitle>
               </SheetHeader>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-base font-semibold text-primary">
-                    {selected.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={selected.avatar_url}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      initialsFrom(selected.name, selected.email)
-                    )}
+              {isAdmin ? (
+                <MemberEditForm
+                  member={selected}
+                  onDone={(updated) => setSelected(updated)}
+                />
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-base font-semibold text-primary">
+                      {selected.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={selected.avatar_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initialsFrom(selected.name, selected.email)
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">{selected.email}</p>
+                      <Badge
+                        variant={selected.role === "admin" ? "default" : "secondary"}
+                        className="mt-1"
+                      >
+                        {ROLE_LABEL[selected.role] ?? selected.role}
+                      </Badge>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{selected.email}</p>
-                    <Badge
-                      variant={selected.role === "admin" ? "default" : "secondary"}
-                      className="mt-1"
+                  {selected.instagram_handle && (
+                    <a
+                      href={`https://instagram.com/${selected.instagram_handle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                     >
-                      {ROLE_LABEL[selected.role] ?? selected.role}
-                    </Badge>
+                      <InstagramIcon className="h-4 w-4" aria-hidden />@
+                      {selected.instagram_handle}
+                    </a>
+                  )}
+                  <div className="text-sm text-muted-foreground">
+                    Membro desde{" "}
+                    {new Date(selected.created_at).toLocaleDateString("pt-BR")}
                   </div>
                 </div>
-                {selected.instagram_handle && (
-                  <a
-                    href={`https://instagram.com/${selected.instagram_handle}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                  >
-                    <InstagramIcon className="h-4 w-4" aria-hidden />@
-                    {selected.instagram_handle}
-                  </a>
-                )}
-                <div className="text-sm text-muted-foreground">
-                  Membro desde{" "}
-                  {new Date(selected.created_at).toLocaleDateString("pt-BR")}
-                </div>
-              </div>
+              )}
             </>
           )}
         </SheetContent>
@@ -198,6 +206,100 @@ export function TeamSection({
         </Sheet>
       )}
     </section>
+  );
+}
+
+function MemberEditForm({
+  member,
+  onDone,
+}: {
+  member: Profile;
+  onDone: (updated: Profile) => void;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
+  function handleSubmit(formData: FormData) {
+    formData.set("member_id", member.id);
+    startTransition(async () => {
+      try {
+        await updateMemberAsAdmin(formData);
+        toast.success("Dados atualizados");
+        router.refresh();
+        onDone({
+          ...member,
+          name: String(formData.get("name") ?? "") || null,
+          email: String(formData.get("email") ?? member.email),
+          instagram_handle:
+            String(formData.get("instagram_handle") ?? "").replace(/^@/, "") || null,
+          role: String(formData.get("role") ?? member.role),
+        });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Falha ao atualizar");
+      }
+    });
+  }
+
+  return (
+    <form action={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Nome completo</Label>
+        <Input id="name" name="name" defaultValue={member.name ?? ""} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">E-mail</Label>
+        <Input id="email" name="email" type="email" defaultValue={member.email} required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="instagram_handle">Instagram</Label>
+        <Input
+          id="instagram_handle"
+          name="instagram_handle"
+          placeholder="@usuario"
+          defaultValue={member.instagram_handle ?? ""}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="role">Papel</Label>
+        <select
+          id="role"
+          name="role"
+          defaultValue={member.role}
+          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+        >
+          <option value="member">Membro</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Nova senha (opcional)</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={passwordVisible ? "text" : "password"}
+            placeholder="Deixe em branco para não alterar"
+            autoComplete="new-password"
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setPasswordVisible((v) => !v)}
+            aria-label={passwordVisible ? "Ocultar senha" : "Mostrar senha"}
+            className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
+          >
+            {passwordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Define a senha diretamente, sem precisar de convite por e-mail.
+        </p>
+      </div>
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Salvando..." : "Salvar alterações"}
+      </Button>
+    </form>
   );
 }
 

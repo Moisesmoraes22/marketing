@@ -76,6 +76,60 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/configuracoes");
 }
 
+const idSchema = z.string().uuid();
+
+const memberUpdateSchema = z.object({
+  name: z.string().trim().max(120).optional(),
+  email: z.string().trim().email("E-mail inválido").optional(),
+  instagram_handle: z.string().trim().max(60).optional(),
+  role: z.enum(["admin", "member"]).optional(),
+  password: z.union([z.string().trim().min(6, "Senha deve ter ao menos 6 caracteres"), z.literal("")]).optional(),
+});
+
+export async function updateMemberAsAdmin(formData: FormData) {
+  await requireAdmin();
+
+  const memberId = idSchema.parse(String(formData.get("member_id") ?? ""));
+
+  const parsed = memberUpdateSchema.safeParse({
+    name: formData.has("name") ? String(formData.get("name")) : undefined,
+    email: formData.has("email") ? String(formData.get("email")) : undefined,
+    instagram_handle: formData.has("instagram_handle")
+      ? String(formData.get("instagram_handle"))
+      : undefined,
+    role: formData.has("role") ? String(formData.get("role")) : undefined,
+    password: formData.has("password") ? String(formData.get("password")) : undefined,
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos");
+  }
+
+  const admin = createAdminClient();
+
+  const authUpdate: { email?: string; password?: string } = {};
+  if (parsed.data.email) authUpdate.email = parsed.data.email;
+  if (parsed.data.password) authUpdate.password = parsed.data.password;
+  if (Object.keys(authUpdate).length > 0) {
+    const { error: authError } = await admin.auth.admin.updateUserById(memberId, authUpdate);
+    if (authError) throw new Error(authError.message);
+  }
+
+  const profileUpdate: Record<string, string | null> = {};
+  if (parsed.data.name !== undefined) profileUpdate.name = parsed.data.name || null;
+  if (parsed.data.email) profileUpdate.email = parsed.data.email;
+  if (parsed.data.instagram_handle !== undefined) {
+    profileUpdate.instagram_handle = normalizeInstagramHandle(parsed.data.instagram_handle);
+  }
+  if (parsed.data.role) profileUpdate.role = parsed.data.role;
+
+  if (Object.keys(profileUpdate).length > 0) {
+    const { error } = await admin.from("profiles").update(profileUpdate).eq("id", memberId);
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath("/configuracoes");
+}
+
 export async function inviteMember(formData: FormData) {
   await requireAdmin();
 
