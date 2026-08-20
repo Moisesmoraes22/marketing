@@ -19,8 +19,13 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-60 shrink-0 border-r bg-background p-4 md:block">
-        <p className="mb-6 px-3 text-sm font-semibold">Sistema de Conteúdo</p>
+      <aside className="hidden w-60 shrink-0 border-r border-sidebar-border bg-sidebar p-4 md:block">
+        <div className="mb-6 flex items-center gap-2 px-3">
+          <span className="size-2.5 rounded-full bg-primary" aria-hidden />
+          <p className="text-sm font-semibold text-sidebar-foreground">
+            Sistema de Conteúdo
+          </p>
+        </div>
         <SidebarNav />
       </aside>
       <div className="flex min-h-screen flex-1 flex-col">
