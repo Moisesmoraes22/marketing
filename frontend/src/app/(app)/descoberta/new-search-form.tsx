@@ -15,6 +15,24 @@ export function NewSearchForm() {
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
+    const hashtagsCount = String(formData.get("hashtags") ?? "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean).length;
+    const accountsCount = String(formData.get("accounts") ?? "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean).length;
+
+    if (hashtagsCount > 50) {
+      toast.error("Máximo de 50 hashtags");
+      return;
+    }
+    if (accountsCount > 50) {
+      toast.error("Máximo de 50 contas");
+      return;
+    }
+
     startTransition(async () => {
       try {
         await createSearch(formData);

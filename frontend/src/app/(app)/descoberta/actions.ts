@@ -13,8 +13,8 @@ function splitList(raw: string): string[] {
 
 const searchSchema = z.object({
   name: z.string().trim().min(1, "Nome da busca é obrigatório").max(120),
-  hashtags: z.array(z.string().trim().min(1).max(60)).max(30),
-  accounts: z.array(z.string().trim().min(1).max(60)).max(30),
+  hashtags: z.array(z.string().trim().min(1).max(60)).max(50, "Máximo de 50 hashtags"),
+  accounts: z.array(z.string().trim().min(1).max(60)).max(50, "Máximo de 50 contas"),
   min_engagement: z.number().int().min(0).max(10_000_000),
   results_limit: z.number().int().min(1, "Mínimo de 1 post").max(200, "Máximo de 200 posts"),
   auto_run_interval_hours: z.number().int().min(1).max(720).nullable(),
