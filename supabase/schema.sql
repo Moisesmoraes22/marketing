@@ -99,6 +99,9 @@ create policy "content_items: leitura/escrita para o time autenticado"
   using (true)
   with check (true);
 
+-- status em tempo real na página /conteudo (Fase 2)
+alter publication supabase_realtime add table public.content_items;
+
 -- =========================================================
 -- analyses
 -- =========================================================
