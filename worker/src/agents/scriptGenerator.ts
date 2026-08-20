@@ -1,6 +1,17 @@
 import { supabase } from "../lib/supabase.js";
 import { completeJson } from "../lib/groq.js";
+import { notifyDiscord } from "../lib/notify.js";
 import type { Job } from "../lib/types.js";
+
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+const FORMAT_LABEL: Record<ScriptFormat, string> = {
+  reel_30s: "Reel 30s",
+  reel_60s: "Reel 60s",
+  reel_90s: "Reel 90s",
+  carousel: "Carrossel",
+  static_post: "Post estático",
+};
 
 type ScriptFormat =
   | "reel_30s"
@@ -107,4 +118,7 @@ export async function runScriptGeneratorAgent(job: Job): Promise<void> {
   });
 
   if (insertError) throw new Error(insertError.message);
+
+  const link = FRONTEND_URL ? ` ${FRONTEND_URL}/conteudo/${content_item_id}` : "";
+  await notifyDiscord(`📝 Roteiro pronto para aprovação (${FORMAT_LABEL[format]}).${link}`);
 }
