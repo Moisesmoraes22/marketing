@@ -16,6 +16,7 @@ const searchSchema = z.object({
   hashtags: z.array(z.string().trim().min(1).max(60)).max(30),
   accounts: z.array(z.string().trim().min(1).max(60)).max(30),
   min_engagement: z.number().int().min(0).max(10_000_000),
+  results_limit: z.number().int().min(1, "Mínimo de 1 post").max(200, "Máximo de 200 posts"),
 });
 
 export async function createSearch(formData: FormData) {
@@ -24,6 +25,7 @@ export async function createSearch(formData: FormData) {
     hashtags: splitList(String(formData.get("hashtags") ?? "")),
     accounts: splitList(String(formData.get("accounts") ?? "")),
     min_engagement: Number(formData.get("min_engagement") ?? 0),
+    results_limit: Number(formData.get("results_limit") ?? 20),
   });
 
   if (!parsed.success) {
@@ -45,7 +47,7 @@ export async function createSearch(formData: FormData) {
       ...parsed.data,
       created_by: user?.id ?? null,
     })
-    .select("id, hashtags, accounts, min_engagement")
+    .select("id, hashtags, accounts, min_engagement, results_limit")
     .single();
 
   if (error) throw new Error(error.message);
@@ -57,6 +59,7 @@ export async function createSearch(formData: FormData) {
       hashtags: search.hashtags,
       accounts: search.accounts,
       min_engagement: search.min_engagement,
+      results_limit: search.results_limit,
     },
     status: "pending",
   });

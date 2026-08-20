@@ -56,6 +56,20 @@ export function NewSearchForm() {
               defaultValue={0}
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="results_limit">Quantidade de posts a buscar</Label>
+            <Input
+              id="results_limit"
+              name="results_limit"
+              type="number"
+              min={1}
+              max={200}
+              defaultValue={20}
+            />
+            <p className="text-xs text-muted-foreground">
+              Números maiores demoram mais para processar.
+            </p>
+          </div>
           <div className="flex items-end sm:col-span-2">
             <Button type="submit" disabled={isPending}>
               {isPending ? "Salvando..." : "Criar busca"}

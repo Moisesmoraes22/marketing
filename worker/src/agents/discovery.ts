@@ -13,7 +13,10 @@ interface DiscoveryPayload {
   hashtags: string[];
   accounts: string[];
   min_engagement: number;
+  results_limit?: number;
 }
+
+const DEFAULT_RESULTS_LIMIT = 20;
 
 interface ApifyRunResponse {
   data: { id: string; defaultDatasetId: string; status: string };
@@ -61,7 +64,7 @@ async function startApifyRun(payload: DiscoveryPayload): Promise<string> {
 
   const input: Record<string, unknown> = {
     resultsType: "posts",
-    resultsLimit: 50,
+    resultsLimit: payload.results_limit ?? DEFAULT_RESULTS_LIMIT,
   };
   if (accountUrls.length > 0) input.directUrls = accountUrls;
   if (payload.hashtags.length > 0) input.hashtags = payload.hashtags;

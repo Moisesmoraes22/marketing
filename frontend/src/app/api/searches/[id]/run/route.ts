@@ -27,7 +27,7 @@ export async function POST(
 
   const { data: search, error: searchError } = await supabase
     .from("searches")
-    .select("id, hashtags, accounts, min_engagement")
+    .select("id, hashtags, accounts, min_engagement, results_limit")
     .eq("id", id)
     .single();
 
@@ -44,6 +44,7 @@ export async function POST(
         hashtags: search.hashtags,
         accounts: search.accounts,
         min_engagement: search.min_engagement,
+        results_limit: search.results_limit,
       },
       status: "pending",
     })

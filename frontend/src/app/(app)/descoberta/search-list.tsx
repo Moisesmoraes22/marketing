@@ -80,6 +80,10 @@ function SearchCard({ search }: { search: Search }) {
           <p className="text-muted-foreground">Engajamento mínimo</p>
           <p>{search.min_engagement}</p>
         </div>
+        <div>
+          <p className="text-muted-foreground">Quantidade de posts</p>
+          <p>{search.results_limit}</p>
+        </div>
         <div className="flex gap-2 pt-2">
           <Button size="sm" onClick={handleRun} disabled={running}>
             {running ? "Executando..." : "Executar agora"}

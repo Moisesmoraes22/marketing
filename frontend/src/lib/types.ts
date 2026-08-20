@@ -4,6 +4,7 @@ export interface Search {
   hashtags: string[];
   accounts: string[];
   min_engagement: number;
+  results_limit: number;
   active: boolean;
   created_by: string | null;
   created_at: string;

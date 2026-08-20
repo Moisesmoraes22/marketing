@@ -18,9 +18,18 @@ const STATUS_CLASS: Record<ContentStatus, string> = {
   error: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400",
 };
 
-export function StatusBadge({ status }: { status: ContentStatus }) {
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: ContentStatus;
+  className?: string;
+}) {
   return (
-    <Badge variant="outline" className={cn("border-transparent", STATUS_CLASS[status])}>
+    <Badge
+      variant="outline"
+      className={cn("border-transparent", STATUS_CLASS[status], className)}
+    >
       {STATUS_LABEL[status]}
     </Badge>
   );
