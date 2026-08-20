@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Heart, MessageCircle, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -205,9 +205,20 @@ export function ContentFeed({
                 <p className="text-sm text-muted-foreground">
                   {previewItem.caption ?? "Sem legenda"}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {previewItem.engagement_score.toLocaleString("pt-BR")} de engajamento
-                </p>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Heart className="h-4 w-4" />
+                    {previewItem.likes_count.toLocaleString("pt-BR")}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <MessageCircle className="h-4 w-4" />
+                    {previewItem.comments_count.toLocaleString("pt-BR")}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4" />
+                    {previewItem.engagement_score.toLocaleString("pt-BR")} total
+                  </span>
+                </div>
                 <Button
                   nativeButton={false}
                   render={<Link href={`/conteudo/${previewItem.id}`} />}
@@ -308,6 +319,10 @@ function ContentTile({
       )}
       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-1.5">
         <StatusBadge status={item.status} className="text-[0.65rem]" />
+        <span className="inline-flex items-center gap-0.5 text-[0.65rem] font-medium text-white">
+          <Heart className="h-3 w-3" />
+          {item.likes_count.toLocaleString("pt-BR")}
+        </span>
       </div>
     </button>
   );

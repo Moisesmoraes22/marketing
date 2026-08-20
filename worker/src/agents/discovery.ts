@@ -162,6 +162,8 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
         caption: post.caption ?? null,
         media_type: mediaType,
         engagement_score: (post.likesCount ?? 0) + (post.commentsCount ?? 0),
+        likes_count: post.likesCount ?? 0,
+        comments_count: post.commentsCount ?? 0,
         thumbnail_url: post.displayUrl ?? null,
         video_url: post.videoUrl ?? null,
         status: "collected",

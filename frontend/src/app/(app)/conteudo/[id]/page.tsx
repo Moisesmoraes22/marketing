@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -81,6 +81,19 @@ export default async function ContentDetailPage({
             />
           </div>
           <p className="text-muted-foreground">{contentItem.caption ?? "Sem legenda"}</p>
+          <div className="flex items-center gap-4 text-sm">
+            <span className="inline-flex items-center gap-1.5">
+              <Heart className="h-4 w-4 text-muted-foreground" />
+              {contentItem.likes_count.toLocaleString("pt-BR")} curtidas
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MessageCircle className="h-4 w-4 text-muted-foreground" />
+              {contentItem.comments_count.toLocaleString("pt-BR")} comentários
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              = {contentItem.engagement_score.toLocaleString("pt-BR")} de engajamento
+            </span>
+          </div>
           <a
             href={contentItem.source_url}
             target="_blank"

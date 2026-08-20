@@ -71,6 +71,9 @@ export function NewSearchForm({ onCreated }: { onCreated?: () => void }) {
               min={0}
               defaultValue={0}
             />
+            <p className="text-xs text-muted-foreground">
+              Soma de curtidas + comentários. Posts abaixo disso são ignorados.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="results_limit">Quantidade de posts a buscar</Label>

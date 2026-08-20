@@ -28,6 +28,8 @@ export interface ContentItem {
   caption: string | null;
   media_type: MediaType;
   engagement_score: number;
+  likes_count: number;
+  comments_count: number;
   thumbnail_url: string | null;
   video_url: string | null;
   collected_at: string;
