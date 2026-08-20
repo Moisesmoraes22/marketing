@@ -21,6 +21,7 @@ interface ApifyRunResponse {
 
 interface ApifyPost {
   url: string;
+  shortCode?: string;
   caption?: string;
   type?: string;
   productType?: string;
@@ -47,15 +48,23 @@ function mapMediaType(post: ApifyPost): "post" | "carousel" | "reel" {
 }
 
 async function startApifyRun(payload: DiscoveryPayload): Promise<string> {
-  // apify/instagram-scraper não tem um campo "hashtags" dedicado — busca por
-  // hashtag é feita apontando directUrls para a página de exploração da tag.
+  // apify/instagram-scraper: directUrls de contas retornam posts normalmente.
+  // directUrls apontando pra página de exploração de uma hashtag (explore/tags/)
+  // retornam METADADOS da hashtag (contagem de posts, tags relacionadas), não
+  // posts — confirmado testando em produção. O campo nativo "hashtags" é o
+  // caminho certo para buscar posts por hashtag; enviar arrays vazios junto
+  // (directUrls: [] ou hashtags: []) fazia o ator retornar um erro de "sem
+  // dados", então cada campo só é incluído quando tem conteúdo.
   const accountUrls = payload.accounts.map(
     (account) => `https://www.instagram.com/${account.replace(/^@/, "")}/`,
   );
-  const hashtagUrls = payload.hashtags.map(
-    (tag) => `https://www.instagram.com/explore/tags/${tag.replace(/^#/, "")}/`,
-  );
-  const directUrls = [...accountUrls, ...hashtagUrls];
+
+  const input: Record<string, unknown> = {
+    resultsType: "posts",
+    resultsLimit: 50,
+  };
+  if (accountUrls.length > 0) input.directUrls = accountUrls;
+  if (payload.hashtags.length > 0) input.hashtags = payload.hashtags;
 
   const res = await fetch(
     `https://api.apify.com/v2/acts/${APIFY_ACTOR}/runs`,
@@ -65,10 +74,7 @@ async function startApifyRun(payload: DiscoveryPayload): Promise<string> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${APIFY_API_TOKEN}`,
       },
-      body: JSON.stringify({
-        directUrls,
-        resultsLimit: 50,
-      }),
+      body: JSON.stringify(input),
     },
   );
 
@@ -130,6 +136,7 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
     (post) =>
       typeof post.url === "string" &&
       post.url.length > 0 &&
+      typeof post.shortCode === "string" && // exclui registros de analytics de hashtag, que não têm shortCode
       (post.likesCount ?? 0) + (post.commentsCount ?? 0) >= payload.min_engagement,
   );
 
