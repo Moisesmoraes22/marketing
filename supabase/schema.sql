@@ -155,6 +155,7 @@ create table public.scripts (
   content jsonb not null,
   voice_profile_snapshot jsonb,
   approved boolean not null default false,
+  flagged_words text[] not null default '{}',
   created_at timestamptz not null default now()
 );
 

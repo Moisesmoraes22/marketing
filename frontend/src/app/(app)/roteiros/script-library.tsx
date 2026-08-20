@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,7 +69,15 @@ export function ScriptLibrary({ initialScripts }: { initialScripts: ScriptRow[] 
     [scripts, filter],
   );
 
-  function handleApprove(id: string) {
+  function handleApprove(id: string, flaggedWords: string[]) {
+    if (
+      flaggedWords.length > 0 &&
+      !window.confirm(
+        `Este roteiro contém palavra(s) que a marca evita: ${flaggedWords.join(", ")}. Aprovar mesmo assim?`,
+      )
+    ) {
+      return;
+    }
     startTransition(async () => {
       try {
         await approveScript(id);
@@ -108,10 +117,18 @@ export function ScriptLibrary({ initialScripts }: { initialScripts: ScriptRow[] 
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <Badge variant="outline">{SCRIPT_FORMAT_LABEL[script.format]}</Badge>
+                {script.flagged_words.length > 0 && (
+                  <div className="flex items-start gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      Contém palavra(s) a evitar: {script.flagged_words.join(", ")}
+                    </span>
+                  </div>
+                )}
                 {!script.approved && (
                   <Button
                     size="sm"
-                    onClick={() => handleApprove(script.id)}
+                    onClick={() => handleApprove(script.id, script.flagged_words)}
                     disabled={isPending}
                   >
                     Aprovar

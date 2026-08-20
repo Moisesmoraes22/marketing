@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabase.js";
 import { completeJson } from "../lib/groq.js";
 import { notifyDiscord } from "../lib/notify.js";
+import { lintScriptContent } from "../lib/brandLinter.js";
 import type { Job } from "../lib/types.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -109,16 +110,28 @@ export async function runScriptGeneratorAgent(job: Job): Promise<void> {
 
   const result = await completeJson<Record<string, unknown>>(systemPrompt, userContent);
 
+  const flaggedWords = lintScriptContent(
+    result,
+    (voiceProfile as VoiceProfile).words_we_avoid,
+  );
+
   const { error: insertError } = await supabase.from("scripts").insert({
     content_item_id,
     format,
     content: result,
     voice_profile_snapshot: voiceProfile,
     approved: false,
+    flagged_words: flaggedWords,
   });
 
   if (insertError) throw new Error(insertError.message);
 
   const link = FRONTEND_URL ? ` ${FRONTEND_URL}/conteudo/${content_item_id}` : "";
-  await notifyDiscord(`📝 Roteiro pronto para aprovação (${FORMAT_LABEL[format]}).${link}`);
+  const warning =
+    flaggedWords.length > 0
+      ? ` ⚠️ contém palavra(s) a evitar: ${flaggedWords.join(", ")}.`
+      : "";
+  await notifyDiscord(
+    `📝 Roteiro pronto para aprovação (${FORMAT_LABEL[format]}).${warning}${link}`,
+  );
 }

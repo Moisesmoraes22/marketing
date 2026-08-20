@@ -123,6 +123,7 @@ export interface ScriptRow {
   content: ScriptContent;
   voice_profile_snapshot: VoiceProfile | null;
   approved: boolean;
+  flagged_words: string[];
   created_at: string;
 }
 
