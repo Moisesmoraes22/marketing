@@ -30,6 +30,9 @@ export interface ContentItem {
   engagement_score: number;
   likes_count: number;
   comments_count: number;
+  omega_score: number | null;
+  recommendation: Recommendation | null;
+  owner_username: string | null;
   thumbnail_url: string | null;
   video_url: string | null;
   collected_at: string;
@@ -50,13 +53,42 @@ export interface AnalysisContent {
   why_it_works: string;
 }
 
+export type Recommendation = "adaptar" | "inspirar" | "ignorar";
+export type RiskLevel = "baixo" | "medio" | "alto";
+
 export interface CritiqueContent {
+  virality_score: number;
   relevance_score: number;
-  adaptation_potential: "alta" | "media" | "baixa";
+  commercial_score: number;
+  adaptation_score: number;
+  risk_level: RiskLevel;
   risks: string[];
-  recommendation: "adaptar" | "inspirar" | "ignorar";
+  recommendation: Recommendation;
   justification: string;
 }
+
+export const RECOMMENDATION_META: Record<
+  Recommendation,
+  { label: string; emoji: string; className: string }
+> = {
+  adaptar: {
+    label: "Adaptar",
+    emoji: "🟢",
+    className:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400",
+  },
+  inspirar: {
+    label: "Inspirar-se",
+    emoji: "🟡",
+    className:
+      "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400",
+  },
+  ignorar: {
+    label: "Ignorar",
+    emoji: "🔴",
+    className: "bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400",
+  },
+};
 
 export interface AnalysisRow {
   id: string;

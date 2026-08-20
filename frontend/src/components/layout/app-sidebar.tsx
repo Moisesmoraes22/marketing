@@ -20,10 +20,18 @@ import {
   SidebarPinToggle,
 } from "@/components/ui/sidebar";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/descoberta", label: "Descoberta", icon: Search },
-  { href: "/roteiros", label: "Roteiros", icon: ScrollText },
+const NAV_GROUPS = [
+  {
+    label: "Visão geral",
+    items: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Workspace",
+    items: [
+      { href: "/descoberta", label: "Descoberta", icon: Search },
+      { href: "/roteiros", label: "Roteiros", icon: ScrollText },
+    ],
+  },
 ] as const;
 
 function Logo({ collapsed }: { collapsed: boolean }) {
@@ -63,36 +71,45 @@ export function AppSidebar({ userEmail }: { userEmail: string | null }) {
             <Logo collapsed={!open} />
             <SidebarPinToggle className="shrink-0" />
           </div>
-          <div className="mt-6 flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
-              const active = pathname.startsWith(item.href);
-              return (
-                <div key={item.href} className="relative">
-                  {active && (
-                    <motion.div
-                      layoutId="sidebar-active-pill"
-                      className="absolute inset-0 rounded-md bg-sidebar-accent"
-                      transition={pillTransition}
-                    />
-                  )}
-                  <SidebarLink
-                    link={{
-                      label: item.label,
-                      href: item.href,
-                      icon: (
-                        <item.icon
-                          className={cn(
-                            "h-4.5 w-4.5 shrink-0 transition-colors",
-                            active ? "text-primary" : "text-sidebar-foreground/70",
-                          )}
+          <div className="mt-6 flex flex-col gap-4">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label} className="flex flex-col gap-1">
+                {open && (
+                  <p className="px-2 text-[0.65rem] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                    {group.label}
+                  </p>
+                )}
+                {group.items.map((item) => {
+                  const active = pathname.startsWith(item.href);
+                  return (
+                    <div key={item.href} className="relative">
+                      {active && (
+                        <motion.div
+                          layoutId="sidebar-active-pill"
+                          className="absolute inset-0 rounded-md bg-sidebar-accent"
+                          transition={pillTransition}
                         />
-                      ),
-                    }}
-                    className="relative z-10"
-                  />
-                </div>
-              );
-            })}
+                      )}
+                      <SidebarLink
+                        link={{
+                          label: item.label,
+                          href: item.href,
+                          icon: (
+                            <item.icon
+                              className={cn(
+                                "h-4.5 w-4.5 shrink-0 transition-colors",
+                                active ? "text-primary" : "text-sidebar-foreground/70",
+                              )}
+                            />
+                          ),
+                        }}
+                        className="relative z-10"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
         <div className="flex flex-col gap-1 border-t border-sidebar-border pt-3">

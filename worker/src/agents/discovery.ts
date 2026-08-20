@@ -32,6 +32,7 @@ interface ApifyPost {
   commentsCount?: number;
   displayUrl?: string;
   videoUrl?: string;
+  ownerUsername?: string;
 }
 
 function isDiscoveryPayload(payload: unknown): payload is DiscoveryPayload {
@@ -164,6 +165,7 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
         engagement_score: (post.likesCount ?? 0) + (post.commentsCount ?? 0),
         likes_count: post.likesCount ?? 0,
         comments_count: post.commentsCount ?? 0,
+        owner_username: post.ownerUsername ?? null,
         thumbnail_url: post.displayUrl ?? null,
         video_url: post.videoUrl ?? null,
         status: "collected",

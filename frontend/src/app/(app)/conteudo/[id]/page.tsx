@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Heart, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OmegaScore, RecommendationBadge } from "@/components/omega-score";
 import { createClient } from "@/lib/supabase/server";
 import type {
   AnalysisContent,
@@ -14,11 +15,29 @@ import type {
 import { StatusBadge } from "../status-badge";
 import { VideoPlayer } from "../video-player";
 
-const RECOMMENDATION_LABEL: Record<CritiqueContent["recommendation"], string> = {
-  adaptar: "Adaptar",
-  inspirar: "Inspirar-se",
-  ignorar: "Ignorar",
+const RISK_LABEL: Record<string, string> = {
+  baixo: "Baixo",
+  medio: "Médio",
+  alto: "Alto",
 };
+
+function SubScore({ label, value }: { label: string; value: number | undefined }) {
+  if (typeof value !== "number") return null;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium tabular-nums">{value}</span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export default async function ContentDetailPage({
   params,
@@ -60,12 +79,25 @@ export default async function ContentDetailPage({
         <ArrowLeft className="h-4 w-4" />
         Voltar
       </Link>
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold">Conteúdo</h1>
-        <Badge variant="secondary" className="capitalize">
-          {contentItem.media_type}
-        </Badge>
-        <StatusBadge status={contentItem.status} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold">Conteúdo</h1>
+          <Badge variant="secondary" className="capitalize">
+            {contentItem.media_type}
+          </Badge>
+          <StatusBadge status={contentItem.status} />
+        </div>
+        {typeof contentItem.omega_score === "number" && (
+          <div className="flex items-center gap-3 rounded-lg border bg-card px-4 py-2">
+            <div className="text-right">
+              <p className="text-xs font-medium text-muted-foreground">Score Ômega</p>
+              <OmegaScore score={contentItem.omega_score} size="lg" />
+            </div>
+            {contentItem.recommendation && (
+              <RecommendationBadge recommendation={contentItem.recommendation} />
+            )}
+          </div>
+        )}
       </div>
 
       <Card>
@@ -179,17 +211,20 @@ export default async function ContentDetailPage({
       {critique && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Crítica</CardTitle>
+            <CardTitle className="text-base">🎯 Aplicabilidade para Ômega</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="font-medium">
-                Relevância: {critique.relevance_score}/10
-              </span>
-              <Badge variant="outline" className="capitalize">
-                potencial {critique.adaptation_potential}
-              </Badge>
-              <Badge>{RECOMMENDATION_LABEL[critique.recommendation]}</Badge>
+              <RecommendationBadge recommendation={critique.recommendation} />
+              {critique.risk_level && (
+                <Badge variant="outline">Risco: {RISK_LABEL[critique.risk_level]}</Badge>
+              )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SubScore label="Viralidade" value={critique.virality_score} />
+              <SubScore label="Relevância" value={critique.relevance_score} />
+              <SubScore label="Potencial comercial" value={critique.commercial_score} />
+              <SubScore label="Adaptação" value={critique.adaptation_score} />
             </div>
             {critique.risks.length > 0 && (
               <div>

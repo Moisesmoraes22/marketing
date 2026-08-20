@@ -8,15 +8,22 @@ interface CritiquePayload {
 }
 
 interface CritiqueResult {
+  virality_score: number;
   relevance_score: number;
-  adaptation_potential: "alta" | "media" | "baixa";
+  commercial_score: number;
+  adaptation_score: number;
+  risk_level: "baixo" | "medio" | "alto";
   risks: string[];
   recommendation: "adaptar" | "inspirar" | "ignorar";
   justification: string;
 }
 
-const SYSTEM_PROMPT = `Avalie a adaptabilidade deste conteúdo para o nicho informado. Retorne APENAS JSON:
-{ relevance_score: number (0-10), adaptation_potential: 'alta'|'media'|'baixa',
+const SYSTEM_PROMPT = `Avalie a oportunidade que este conteúdo representa para o nicho informado. Retorne APENAS JSON:
+{ virality_score: number (0-100, o quanto o formato/hook tende a viralizar),
+  relevance_score: number (0-100, o quanto é relevante para o nicho),
+  commercial_score: number (0-100, potencial comercial/de conversão),
+  adaptation_score: number (0-100, o quanto dá pra adaptar sem soar cópia),
+  risk_level: 'baixo'|'medio'|'alto' (risco de imagem/marca ao adaptar),
   risks: string[], recommendation: 'adaptar'|'inspirar'|'ignorar', justification: string }`;
 
 function isCritiquePayload(payload: unknown): payload is CritiquePayload {
@@ -68,9 +75,21 @@ export async function runCritiqueAgent(job: Job): Promise<void> {
     });
     if (insertError) throw new Error(insertError.message);
 
+    const omegaScore = Math.round(
+      (result.virality_score +
+        result.relevance_score +
+        result.commercial_score +
+        result.adaptation_score) /
+        4,
+    );
+
     const { error: updateError } = await supabase
       .from("content_items")
-      .update({ status: "done" })
+      .update({
+        status: "done",
+        omega_score: omegaScore,
+        recommendation: result.recommendation,
+      })
       .eq("id", content_item_id);
     if (updateError) throw new Error(updateError.message);
   });
