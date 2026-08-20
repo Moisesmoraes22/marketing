@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   LayoutDashboard,
   Search,
@@ -15,7 +15,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Sidebar, DesktopSidebar, SidebarLink } from "@/components/ui/sidebar";
+import {
+  Sidebar,
+  DesktopSidebar,
+  SidebarLink,
+  SidebarPinToggle,
+} from "@/components/ui/sidebar";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -42,6 +47,10 @@ export function AppSidebar({ userEmail }: { userEmail: string | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const pillTransition = reducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 500, damping: 35 };
 
   async function handleLogout() {
     const supabase = createClient();
@@ -54,7 +63,10 @@ export function AppSidebar({ userEmail }: { userEmail: string | null }) {
     <Sidebar open={open} setOpen={setOpen}>
       <DesktopSidebar className="justify-between gap-6">
         <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-          <Logo collapsed={!open} />
+          <div className="flex items-center justify-between gap-2">
+            <Logo collapsed={!open} />
+            <SidebarPinToggle className="shrink-0" />
+          </div>
           <div className="mt-6 flex flex-col gap-1">
             {NAV_ITEMS.map((item) => {
               const active = pathname.startsWith(item.href);
@@ -64,7 +76,7 @@ export function AppSidebar({ userEmail }: { userEmail: string | null }) {
                     <motion.div
                       layoutId="sidebar-active-pill"
                       className="absolute inset-0 rounded-md bg-sidebar-accent"
-                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                      transition={pillTransition}
                     />
                   )}
                   <SidebarLink
@@ -93,7 +105,7 @@ export function AppSidebar({ userEmail }: { userEmail: string | null }) {
               <motion.div
                 layoutId="sidebar-active-pill"
                 className="absolute inset-0 rounded-md bg-sidebar-accent"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                transition={pillTransition}
               />
             )}
             <SidebarLink

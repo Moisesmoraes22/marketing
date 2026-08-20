@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useId, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ function scriptPreview(script: ScriptRow): string {
 }
 
 export function ScriptLibrary({ initialScripts }: { initialScripts: ScriptRow[] }) {
+  const instanceId = useId();
   const [scripts, setScripts] = useState(initialScripts);
   const [filter, setFilter] = useState<ScriptFormat | "all">("all");
   const [isPending, startTransition] = useTransition();
@@ -37,7 +38,7 @@ export function ScriptLibrary({ initialScripts }: { initialScripts: ScriptRow[] 
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
-      .channel("scripts_library")
+      .channel(`scripts_library:${instanceId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "scripts" },

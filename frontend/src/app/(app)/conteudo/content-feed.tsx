@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Trash2 } from "lucide-react";
@@ -33,6 +33,7 @@ export function ContentFeed({
   pageCount: number;
 }) {
   const router = useRouter();
+  const instanceId = useId();
   const [items, setItems] = useState(initialItems);
   const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
   const [selectMode, setSelectMode] = useState(false);
@@ -48,7 +49,7 @@ export function ContentFeed({
     const supabase = createClient();
 
     const channel = supabase
-      .channel("content_items_feed")
+      .channel(`content_items_feed:${instanceId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "content_items" },

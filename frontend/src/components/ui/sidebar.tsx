@@ -3,8 +3,8 @@
 import { cn } from "@/lib/utils";
 import Link, { LinkProps } from "next/link";
 import React, { useState, createContext, useContext } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Menu, PanelLeft, X } from "lucide-react";
 
 interface Links {
   label: string;
@@ -16,6 +16,8 @@ interface SidebarContextProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   animate: boolean;
+  pinned: boolean;
+  setPinned: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(undefined);
@@ -40,12 +42,13 @@ export const SidebarProvider = ({
   animate?: boolean;
 }) => {
   const [openState, setOpenState] = useState(false);
+  const [pinned, setPinned] = useState(false);
 
   const open = openProp !== undefined ? openProp : openState;
   const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
+    <SidebarContext.Provider value={{ open, setOpen, animate, pinned, setPinned }}>
       {children}
     </SidebarContext.Provider>
   );
@@ -83,7 +86,9 @@ export const DesktopSidebar = ({
   children,
   ...props
 }: React.ComponentProps<typeof motion.div>) => {
-  const { open, setOpen, animate } = useSidebar();
+  const { open, setOpen, animate, pinned } = useSidebar();
+  const reducedMotion = useReducedMotion();
+
   return (
     <motion.div
       className={cn(
@@ -93,12 +98,39 @@ export const DesktopSidebar = ({
       animate={{
         width: animate ? (open ? "260px" : "68px") : "260px",
       }}
+      transition={reducedMotion ? { duration: 0 } : undefined}
       onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseLeave={() => !pinned && setOpen(false)}
       {...props}
     >
       {children}
     </motion.div>
+  );
+};
+
+/** Botão explícito pra fixar o menu expandido — alternativa ao hover
+ * pra quem usa toque ou teclado, que não consegue disparar mouseenter. */
+export const SidebarPinToggle = ({ className }: { className?: string }) => {
+  const { pinned, setPinned, setOpen } = useSidebar();
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        const next = !pinned;
+        setPinned(next);
+        setOpen(next);
+      }}
+      aria-pressed={pinned}
+      aria-label={pinned ? "Recolher menu" : "Fixar menu expandido"}
+      title={pinned ? "Recolher menu" : "Fixar menu expandido"}
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+        className,
+      )}
+    >
+      <PanelLeft className="h-4 w-4" />
+    </button>
   );
 };
 
@@ -155,6 +187,7 @@ export const SidebarLink = ({
   return (
     <Link
       href={link.href}
+      title={open ? undefined : link.label}
       className={cn(
         "group/sidebar flex items-center justify-start gap-2 rounded-md px-2 py-2",
         className,

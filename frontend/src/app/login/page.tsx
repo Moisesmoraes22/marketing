@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "./password-input";
 import { signIn } from "./actions";
 
 export default async function LoginPage({
@@ -31,13 +32,7 @@ export default async function LoginPage({
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
+              <PasswordInput />
             </div>
             {error && (
               <p className="text-sm text-destructive" role="alert">

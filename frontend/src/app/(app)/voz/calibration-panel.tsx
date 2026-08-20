@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import type {
 import { generateCalibrationDraft, submitCalibrationFeedback } from "./actions";
 
 export function CalibrationPanel({ profile }: { profile: VoiceProfile }) {
+  const instanceId = useId();
   const [draft, setDraft] = useState<ScriptRow | null>(null);
   const [isGenerating, setGenerating] = useState(false);
   const [note, setNote] = useState("");
@@ -22,7 +23,7 @@ export function CalibrationPanel({ profile }: { profile: VoiceProfile }) {
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
-      .channel("voice_calibration")
+      .channel(`voice_calibration:${instanceId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "scripts" },
