@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Check, Heart, MessageCircle, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ export function ContentFeed({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const instanceId = useId();
   const [items, setItems] = useState(initialItems);
   const [previewItem, setPreviewItem] = useState<ContentItem | null>(null);
@@ -56,7 +57,10 @@ export function ContentFeed({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "content_items" },
         (payload) => {
-          if (page !== 1) return;
+          const hasFilters = ["type", "potential", "recommendation", "status", "period", "q"].some(
+            (key) => searchParams.get(key),
+          );
+          if (page !== 1 || hasFilters) return;
           setItems((current) => [payload.new as ContentItem, ...current].slice(0, 12));
         },
       )
@@ -81,7 +85,9 @@ export function ContentFeed({
   }, [page]);
 
   function goToPage(next: number) {
-    router.push(`${pathname}?page=${next}`);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(next));
+    router.push(`${pathname}?${params.toString()}`);
   }
 
   function toggleSelectMode() {
