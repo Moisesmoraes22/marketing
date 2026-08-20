@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { registerHandler, startPoller } from "./poller.js";
+import { startScheduler } from "./scheduler.js";
 import { runDiscoveryAgent } from "./agents/discovery.js";
 import { runTranscriptionAgent } from "./agents/transcription.js";
 import { runAnalysisAgent } from "./agents/analysis.js";
@@ -23,4 +24,5 @@ registerHandler("generate_script", runScriptGeneratorAgent);
 app.listen(PORT, () => {
   console.log(`[worker] escutando na porta ${PORT}`);
   startPoller();
+  startScheduler();
 });

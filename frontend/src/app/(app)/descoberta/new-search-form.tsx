@@ -70,6 +70,24 @@ export function NewSearchForm() {
               Números maiores demoram mais para processar.
             </p>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="auto_run_interval_hours">Repetir automaticamente</Label>
+            <select
+              id="auto_run_interval_hours"
+              name="auto_run_interval_hours"
+              defaultValue="manual"
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+            >
+              <option value="manual">Só manual</option>
+              <option value="6">A cada 6 horas</option>
+              <option value="12">A cada 12 horas</option>
+              <option value="24">Diariamente</option>
+              <option value="168">Semanalmente</option>
+            </select>
+            <p className="text-xs text-muted-foreground">
+              O worker dispara sozinho nesse intervalo, sem precisar clicar.
+            </p>
+          </div>
           <div className="flex items-end sm:col-span-2">
             <Button type="submit" disabled={isPending}>
               {isPending ? "Salvando..." : "Criar busca"}

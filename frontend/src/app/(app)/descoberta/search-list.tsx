@@ -9,6 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Search } from "@/lib/types";
 import { toggleSearchActive } from "./actions";
 
+const INTERVAL_LABEL: Record<number, string> = {
+  6: "a cada 6h",
+  12: "a cada 12h",
+  24: "diariamente",
+  168: "semanalmente",
+};
+
 export function SearchList({ searches }: { searches: Search[] }) {
   if (searches.length === 0) {
     return (
@@ -63,9 +70,16 @@ function SearchCard({ search }: { search: Search }) {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
         <CardTitle className="text-base">{search.name}</CardTitle>
-        <Badge variant={search.active ? "default" : "secondary"}>
-          {search.active ? "ativa" : "inativa"}
-        </Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge variant={search.active ? "default" : "secondary"}>
+            {search.active ? "ativa" : "inativa"}
+          </Badge>
+          {search.auto_run_interval_hours && (
+            <Badge variant="outline" className="text-[0.65rem]">
+              🔁 {INTERVAL_LABEL[search.auto_run_interval_hours] ?? `a cada ${search.auto_run_interval_hours}h`}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div>
@@ -84,6 +98,16 @@ function SearchCard({ search }: { search: Search }) {
           <p className="text-muted-foreground">Quantidade de posts</p>
           <p>{search.results_limit}</p>
         </div>
+        {search.auto_run_interval_hours && (
+          <div>
+            <p className="text-muted-foreground">Última execução automática</p>
+            <p>
+              {search.last_run_at
+                ? new Date(search.last_run_at).toLocaleString("pt-BR")
+                : "ainda não rodou"}
+            </p>
+          </div>
+        )}
         <div className="flex gap-2 pt-2">
           <Button size="sm" onClick={handleRun} disabled={running}>
             {running ? "Executando..." : "Executar agora"}

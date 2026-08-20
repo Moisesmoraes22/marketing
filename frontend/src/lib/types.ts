@@ -6,6 +6,8 @@ export interface Search {
   min_engagement: number;
   results_limit: number;
   active: boolean;
+  auto_run_interval_hours: number | null;
+  last_run_at: string | null;
   created_by: string | null;
   created_at: string;
 }

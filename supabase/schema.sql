@@ -83,6 +83,8 @@ create table public.searches (
   min_engagement int not null default 0,
   results_limit int not null default 20 check (results_limit between 1 and 200),
   active boolean not null default true,
+  auto_run_interval_hours int, -- null = só manual; senão, repete sozinha nesse intervalo
+  last_run_at timestamptz,
   created_by uuid references public.profiles (id),
   created_at timestamptz not null default now()
 );

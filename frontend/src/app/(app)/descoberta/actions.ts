@@ -17,7 +17,14 @@ const searchSchema = z.object({
   accounts: z.array(z.string().trim().min(1).max(60)).max(30),
   min_engagement: z.number().int().min(0).max(10_000_000),
   results_limit: z.number().int().min(1, "Mínimo de 1 post").max(200, "Máximo de 200 posts"),
+  auto_run_interval_hours: z.number().int().min(1).max(720).nullable(),
 });
+
+function parseAutoRunInterval(raw: string | null): number | null {
+  if (!raw || raw === "manual") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 
 export async function createSearch(formData: FormData) {
   const parsed = searchSchema.safeParse({
@@ -26,6 +33,9 @@ export async function createSearch(formData: FormData) {
     accounts: splitList(String(formData.get("accounts") ?? "")),
     min_engagement: Number(formData.get("min_engagement") ?? 0),
     results_limit: Number(formData.get("results_limit") ?? 20),
+    auto_run_interval_hours: parseAutoRunInterval(
+      formData.get("auto_run_interval_hours") as string | null,
+    ),
   });
 
   if (!parsed.success) {
