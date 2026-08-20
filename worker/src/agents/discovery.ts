@@ -3,8 +3,10 @@ import type { Job } from "../lib/types.js";
 
 const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN;
 const APIFY_ACTOR = "apify~instagram-scraper";
-const POLL_INTERVAL_MS = 5_000;
-const MAX_POLL_ATTEMPTS = 10;
+const POLL_INTERVAL_MS = 10_000;
+// runs reais do Apify levam 30-90s+ mesmo para uma única conta — 10 tentativas
+// de 5s (50s) estourava perto do fim. 30 tentativas de 10s dá 5 minutos.
+const MAX_POLL_ATTEMPTS = 30;
 
 interface DiscoveryPayload {
   search_id: string;
