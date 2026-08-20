@@ -143,6 +143,9 @@ create policy "scripts: leitura/escrita para o time autenticado"
   using (true)
   with check (true);
 
+-- biblioteca /roteiros e calibração de voz em tempo real (Fase 4)
+alter publication supabase_realtime add table public.scripts;
+
 -- =========================================================
 -- jobs (fila simples — substitui Redis/BullMQ)
 -- =========================================================

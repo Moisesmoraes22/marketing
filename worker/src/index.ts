@@ -4,6 +4,7 @@ import { runDiscoveryAgent } from "./agents/discovery.js";
 import { runTranscriptionAgent } from "./agents/transcription.js";
 import { runAnalysisAgent } from "./agents/analysis.js";
 import { runCritiqueAgent } from "./agents/critique.js";
+import { runScriptGeneratorAgent } from "./agents/scriptGenerator.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -16,6 +17,7 @@ registerHandler("discover", runDiscoveryAgent);
 registerHandler("transcribe", runTranscriptionAgent);
 registerHandler("analyze", runAnalysisAgent);
 registerHandler("critique", runCritiqueAgent);
+registerHandler("generate_script", runScriptGeneratorAgent);
 
 app.listen(PORT, () => {
   console.log(`[worker] escutando na porta ${PORT}`);

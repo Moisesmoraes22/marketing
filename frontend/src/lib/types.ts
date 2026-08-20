@@ -59,3 +59,73 @@ export interface AnalysisRow {
   content: TranscriptionContent | AnalysisContent | CritiqueContent;
   created_at: string;
 }
+
+export interface VoiceProfile {
+  id: string;
+  target_audience: string | null;
+  tone_adjectives: string[];
+  words_we_use: string[];
+  words_we_avoid: string[];
+  example_approved_post: string | null;
+  calibration_notes: string | null;
+  updated_at: string;
+}
+
+export type ScriptFormat =
+  | "reel_30s"
+  | "reel_60s"
+  | "reel_90s"
+  | "carousel"
+  | "static_post";
+
+export interface CarouselSlide {
+  slide_number: number;
+  headline: string;
+  body: string;
+  visual_suggestion: string;
+}
+
+export interface CarouselScriptContent {
+  slides: CarouselSlide[];
+  caption: string;
+  hashtags: string[];
+}
+
+export interface ReelScriptContent {
+  hook: string;
+  body_segments: string[];
+  cta: string;
+  caption: string;
+  hashtags: string[];
+}
+
+export interface StaticPostScriptContent {
+  headline: string;
+  body: string;
+  cta: string;
+  caption: string;
+  hashtags: string[];
+}
+
+export type ScriptContent =
+  | CarouselScriptContent
+  | ReelScriptContent
+  | StaticPostScriptContent;
+
+export interface ScriptRow {
+  id: string;
+  content_item_id: string;
+  format: ScriptFormat;
+  content: ScriptContent;
+  voice_profile_snapshot: VoiceProfile | null;
+  approved: boolean;
+  created_at: string;
+}
+
+export const SCRIPT_FORMAT_LABEL: Record<ScriptFormat, string> = {
+  reel_30s: "Reel 30s",
+  reel_60s: "Reel 60s",
+  reel_90s: "Reel 90s",
+  carousel: "Carrossel",
+  static_post: "Post estático",
+};
