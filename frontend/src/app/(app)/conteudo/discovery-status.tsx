@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 interface DiscoverJob {
   id: string;
-  status: "pending" | "running" | "done" | "error";
+  status: "pending" | "running" | "done" | "error" | "cancelled";
   payload: { results_limit?: number; search_id?: string };
   error_message: string | null;
   started_at: string | null;
@@ -34,6 +35,7 @@ export function DiscoveryStatus() {
   const [activeJobs, setActiveJobs] = useState<Map<string, DiscoverJob>>(new Map());
   const [stats, setStats] = useState<DiscoverStats | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [cancelling, setCancelling] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/jobs/discover-stats")
@@ -78,17 +80,19 @@ export function DiscoveryStatus() {
               return current;
             }
             const next = new Map(current);
-            if (job.status === "done" || job.status === "error") {
+            if (job.status === "pending" || job.status === "running") {
+              next.set(job.id, job);
+            } else {
               if (next.has(job.id)) {
-                toast[job.status === "done" ? "success" : "error"](
-                  job.status === "done"
-                    ? "Busca concluída ✅"
-                    : `Busca falhou: ${job.error_message ?? "erro desconhecido"}`,
-                );
+                if (job.status === "done") {
+                  toast.success("Busca concluída ✅");
+                } else if (job.status === "cancelled") {
+                  toast("Busca cancelada");
+                } else {
+                  toast.error(`Busca falhou: ${job.error_message ?? "erro desconhecido"}`);
+                }
               }
               next.delete(job.id);
-            } else {
-              next.set(job.id, job);
             }
             return next;
           });
@@ -107,6 +111,31 @@ export function DiscoveryStatus() {
     return () => clearInterval(interval);
   }, [activeJobs.size]);
 
+  function handleCancel(jobId: string) {
+    setCancelling((current) => new Set(current).add(jobId));
+    fetch(`/api/jobs/${jobId}/cancel`, { method: "POST" })
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error ?? "falha ao cancelar");
+        setActiveJobs((current) => {
+          const next = new Map(current);
+          next.delete(jobId);
+          return next;
+        });
+        toast("Busca cancelada");
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Falha ao cancelar busca");
+      })
+      .finally(() => {
+        setCancelling((current) => {
+          const next = new Set(current);
+          next.delete(jobId);
+          return next;
+        });
+      });
+  }
+
   if (activeJobs.size === 0) return null;
 
   const jobs = Array.from(activeJobs.values());
@@ -115,23 +144,39 @@ export function DiscoveryStatus() {
     Math.max(...jobs.map((j) => j.payload.results_limit ?? 6)),
   );
 
-  const running = jobs.find((j) => j.status === "running" && j.started_at);
-  let etaLabel = "isso pode levar alguns minutos...";
-  if (running && stats && running.started_at) {
-    const items = running.payload.results_limit ?? 6;
-    const totalEstimateSec = stats.baseSeconds + stats.secondsPerItem * items;
-    const elapsedSec = (now - new Date(running.started_at).getTime()) / 1000;
-    etaLabel = formatRemaining(totalEstimateSec - elapsedSec);
-  } else if (jobs.some((j) => j.status === "pending")) {
-    etaLabel = "na fila, aguardando a busca anterior terminar...";
-  }
-
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Buscando posts no Instagram — {etaLabel}
-      </div>
+      {jobs.map((job) => {
+        let etaLabel = "na fila, aguardando a busca anterior terminar...";
+        if (job.status === "running" && job.started_at) {
+          if (stats) {
+            const items = job.payload.results_limit ?? 6;
+            const totalEstimateSec = stats.baseSeconds + stats.secondsPerItem * items;
+            const elapsedSec = (now - new Date(job.started_at).getTime()) / 1000;
+            etaLabel = formatRemaining(totalEstimateSec - elapsedSec);
+          } else {
+            etaLabel = "isso pode levar alguns minutos...";
+          }
+        }
+
+        return (
+          <div key={job.id} className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Buscando posts no Instagram — {etaLabel}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleCancel(job.id)}
+              disabled={cancelling.has(job.id)}
+            >
+              <X className="h-3.5 w-3.5" />
+              Cancelar
+            </Button>
+          </div>
+        );
+      })}
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
         {Array.from({ length: skeletonCount }).map((_, i) => (
           <div

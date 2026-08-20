@@ -91,8 +91,29 @@ async function startApifyRun(payload: DiscoveryPayload): Promise<string> {
   return body.data.id;
 }
 
-async function waitForRunAndFetchDataset(runId: string): Promise<ApifyPost[]> {
+async function abortApifyRun(runId: string): Promise<void> {
+  try {
+    await fetch(`https://api.apify.com/v2/actor-runs/${runId}/abort`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${APIFY_API_TOKEN}` },
+    });
+  } catch (err) {
+    console.error("[discovery] falha ao abortar run do Apify:", err);
+  }
+}
+
+async function isJobCancelled(jobId: string): Promise<boolean> {
+  const { data } = await supabase.from("jobs").select("status").eq("id", jobId).maybeSingle();
+  return data?.status === "cancelled";
+}
+
+async function waitForRunAndFetchDataset(runId: string, jobId: string): Promise<ApifyPost[]> {
   for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+    if (await isJobCancelled(jobId)) {
+      await abortApifyRun(runId);
+      throw new Error("Busca cancelada pelo usuário");
+    }
+
     const res = await fetch(`https://api.apify.com/v2/actor-runs/${runId}`, {
       headers: { Authorization: `Bearer ${APIFY_API_TOKEN}` },
     });
@@ -135,7 +156,7 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
   const payload = job.payload;
 
   const runId = await startApifyRun(payload);
-  const posts = await waitForRunAndFetchDataset(runId);
+  const posts = await waitForRunAndFetchDataset(runId, job.id);
 
   const filtered = posts.filter(
     (post) =>

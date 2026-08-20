@@ -59,6 +59,14 @@ async function processJob(job: Job) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[poller] job ${job.id} falhou:`, message);
+
+    const { data: current } = await supabase
+      .from("jobs")
+      .select("status")
+      .eq("id", job.id)
+      .maybeSingle();
+    if (current?.status === "cancelled") return;
+
     await supabase
       .from("jobs")
       .update({
