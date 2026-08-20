@@ -3,10 +3,19 @@ import { TeamSection } from "./team-section";
 
 export default async function ConfiguracoesPage() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("id, email, name, role")
-    .order("created_at", { ascending: true });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [{ data: members }, { data: currentProfile }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, email, name, role, created_at")
+      .order("created_at", { ascending: true }),
+    user
+      ? supabase.from("profiles").select("role").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
+  ]);
 
   return (
     <div className="space-y-10">
@@ -17,7 +26,10 @@ export default async function ConfiguracoesPage() {
         </p>
       </div>
 
-      <TeamSection members={data ?? []} />
+      <TeamSection
+        members={members ?? []}
+        isAdmin={currentProfile?.role === "admin"}
+      />
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold">Integrações e API keys</h2>

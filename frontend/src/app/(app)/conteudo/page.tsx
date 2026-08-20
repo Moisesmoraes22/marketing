@@ -2,14 +2,27 @@ import { createClient } from "@/lib/supabase/server";
 import type { ContentItem } from "@/lib/types";
 import { ContentFeed } from "./content-feed";
 
-export default async function ConteudoPage() {
+const PAGE_SIZE = 12;
+
+export default async function ConteudoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam ?? 1) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from("content_items")
-    .select("*")
-    .order("collected_at", { ascending: false });
+    .select("*", { count: "exact" })
+    .order("collected_at", { ascending: false })
+    .range(from, to);
 
   const items = (data ?? []) as ContentItem[];
+  const pageCount = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   return (
     <div className="space-y-6">
@@ -19,7 +32,7 @@ export default async function ConteudoPage() {
           Feed de posts coletados com status do pipeline em tempo real.
         </p>
       </div>
-      <ContentFeed initialItems={items} />
+      <ContentFeed initialItems={items} page={page} pageCount={pageCount} />
     </div>
   );
 }
