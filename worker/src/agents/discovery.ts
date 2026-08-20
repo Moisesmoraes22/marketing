@@ -45,9 +45,15 @@ function mapMediaType(post: ApifyPost): "post" | "carousel" | "reel" {
 }
 
 async function startApifyRun(payload: DiscoveryPayload): Promise<string> {
-  const directUrls = payload.accounts.map(
+  // apify/instagram-scraper não tem um campo "hashtags" dedicado — busca por
+  // hashtag é feita apontando directUrls para a página de exploração da tag.
+  const accountUrls = payload.accounts.map(
     (account) => `https://www.instagram.com/${account.replace(/^@/, "")}/`,
   );
+  const hashtagUrls = payload.hashtags.map(
+    (tag) => `https://www.instagram.com/explore/tags/${tag.replace(/^#/, "")}/`,
+  );
+  const directUrls = [...accountUrls, ...hashtagUrls];
 
   const res = await fetch(
     `https://api.apify.com/v2/acts/${APIFY_ACTOR}/runs`,
@@ -59,7 +65,6 @@ async function startApifyRun(payload: DiscoveryPayload): Promise<string> {
       },
       body: JSON.stringify({
         directUrls,
-        hashtags: payload.hashtags,
         resultsLimit: 50,
       }),
     },
@@ -121,9 +126,17 @@ export async function runDiscoveryAgent(job: Job): Promise<void> {
 
   const filtered = posts.filter(
     (post) =>
-      (post.likesCount ?? 0) + (post.commentsCount ?? 0) >=
-      payload.min_engagement,
+      typeof post.url === "string" &&
+      post.url.length > 0 &&
+      (post.likesCount ?? 0) + (post.commentsCount ?? 0) >= payload.min_engagement,
   );
+
+  const skipped = posts.length - filtered.length;
+  if (skipped > 0) {
+    console.warn(
+      `[discovery] job ${job.id}: ${skipped} item(s) sem "url" ou abaixo do engajamento mínimo foram ignorados`,
+    );
+  }
 
   for (const post of filtered) {
     const mediaType = mapMediaType(post);
