@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -86,9 +87,15 @@ export async function inviteMember(formData: FormData) {
     throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos");
   }
 
+  const headerList = await headers();
+  const host = headerList.get("host");
+  const protocol = host?.startsWith("localhost") ? "http" : "https";
+  const origin = host ? `${protocol}://${host}` : undefined;
+
   const admin = createAdminClient();
   const { data, error } = await admin.auth.admin.inviteUserByEmail(
     parsed.data.email,
+    origin ? { redirectTo: `${origin}/definir-senha` } : undefined,
   );
   if (error) throw new Error(error.message);
 
