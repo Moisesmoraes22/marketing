@@ -15,7 +15,13 @@ const INTERVAL_LABEL: Record<number, string> = {
   168: "semanalmente",
 };
 
-export function SearchList({ searches }: { searches: Search[] }) {
+export function SearchList({
+  searches,
+  onRun,
+}: {
+  searches: Search[];
+  onRun?: () => void;
+}) {
   if (searches.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -27,13 +33,13 @@ export function SearchList({ searches }: { searches: Search[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {searches.map((search) => (
-        <SearchCard key={search.id} search={search} />
+        <SearchCard key={search.id} search={search} onRun={onRun} />
       ))}
     </div>
   );
 }
 
-function SearchCard({ search }: { search: Search }) {
+function SearchCard({ search, onRun }: { search: Search; onRun?: () => void }) {
   const [running, setRunning] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -45,7 +51,8 @@ function SearchCard({ search }: { search: Search }) {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "falha ao executar busca");
-      toast.success("Busca disparada — acompanhe o progresso logo abaixo");
+      toast.success("Busca disparada — acompanhe o progresso em Conteúdo");
+      onRun?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao executar busca");
     } finally {

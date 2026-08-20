@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSearch } from "./actions";
 
-export function NewSearchForm() {
+export function NewSearchForm({ onCreated }: { onCreated?: () => void }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -35,7 +35,8 @@ export function NewSearchForm() {
       try {
         await createSearch(formData);
         formRef.current?.reset();
-        toast.success("Busca disparada — acompanhe o progresso logo abaixo");
+        toast.success("Busca disparada — acompanhe o progresso em Conteúdo");
+        onCreated?.();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Falha ao criar busca");
       }

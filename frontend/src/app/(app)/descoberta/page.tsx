@@ -1,9 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ContentItem, Search } from "@/lib/types";
-import { NewSearchForm } from "./new-search-form";
-import { SearchList } from "./search-list";
-import { ContentFeed } from "../conteudo/content-feed";
-import { ProcessingBanner } from "../conteudo/processing-banner";
+import { DescobertaTabs } from "./descoberta-tabs";
 
 const PAGE_SIZE = 12;
 
@@ -32,28 +29,19 @@ export default async function DescobertaPage({
   const pageCount = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   return (
-    <div className="space-y-10">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Descoberta</h1>
-          <p className="text-sm text-muted-foreground">
-            Configure hashtags, contas e engajamento mínimo para buscar conteúdo viral.
-          </p>
-        </div>
-        <NewSearchForm />
-        <SearchList searches={searches} />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Descoberta</h1>
+        <p className="text-sm text-muted-foreground">
+          Busque conteúdo viral e acompanhe o resultado.
+        </p>
       </div>
-
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold">Conteúdo</h2>
-          <p className="text-sm text-muted-foreground">
-            Feed de posts coletados com status do pipeline em tempo real.
-          </p>
-        </div>
-        <ProcessingBanner />
-        <ContentFeed initialItems={content} page={page} pageCount={pageCount} />
-      </div>
+      <DescobertaTabs
+        searches={searches}
+        content={content}
+        page={page}
+        pageCount={pageCount}
+      />
     </div>
   );
 }
