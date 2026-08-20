@@ -13,6 +13,7 @@ type ContentSearchParams = {
   period?: string;
   sort?: string;
   q?: string;
+  favorite?: string;
 };
 
 const PERIOD_TO_MS: Record<string, number> = {
@@ -48,6 +49,7 @@ export default async function DescobertaPage({
     );
   }
   if (params.q) query = query.ilike("caption", `%${params.q}%`);
+  if (params.favorite === "1") query = query.eq("is_favorite", true);
 
   if (params.sort === "score") {
     query = query.order("omega_score", { ascending: false, nullsFirst: false });
@@ -69,9 +71,9 @@ export default async function DescobertaPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Descoberta</h1>
+        <h1 className="text-2xl font-semibold">Descobrir conteúdo</h1>
         <p className="text-sm text-muted-foreground">
-          Busque conteúdo viral e acompanhe o resultado.
+          Encontre conteúdos que podem virar oportunidades para sua marca.
         </p>
       </div>
       <DescobertaTabs

@@ -89,13 +89,13 @@ export function NewSearchForm({ onCreated }: { onCreated?: () => void }) {
               Números maiores demoram mais para processar.
             </p>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="auto_run_interval_hours">Repetir automaticamente</Label>
             <select
               id="auto_run_interval_hours"
               name="auto_run_interval_hours"
               defaultValue="manual"
-              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm sm:w-64"
             >
               <option value="manual">Só manual</option>
               <option value="6">A cada 6 horas</option>
@@ -109,7 +109,7 @@ export function NewSearchForm({ onCreated }: { onCreated?: () => void }) {
           </div>
           <div className="flex items-end sm:col-span-2">
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Salvando..." : "Criar busca"}
+              {isPending ? "Buscando..." : "🔎 Executar busca"}
             </Button>
           </div>
         </form>

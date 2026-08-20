@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Heart, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "Todos" },
@@ -100,9 +102,15 @@ export function ContentFilters() {
     setParam("q", query.trim());
   }
 
+  const favoritesOnly = searchParams.get("favorite") === "1";
+
+  function toggleFavoritesOnly() {
+    setParam("favorite", favoritesOnly ? "" : "1");
+  }
+
   const hasActiveFilters =
-    ["type", "potential", "recommendation", "status", "period", "q"].some((key) =>
-      searchParams.get(key),
+    ["type", "potential", "recommendation", "status", "period", "q", "favorite"].some(
+      (key) => searchParams.get(key),
     ) || searchParams.get("sort");
 
   return (
@@ -152,6 +160,15 @@ export function ContentFilters() {
         onChange={(v) => setParam("sort", v)}
         options={SORT_OPTIONS}
       />
+      <Button
+        type="button"
+        size="sm"
+        variant={favoritesOnly ? "default" : "outline"}
+        onClick={toggleFavoritesOnly}
+      >
+        <Heart className={cn("h-3.5 w-3.5", favoritesOnly && "fill-current")} />
+        Favoritos
+      </Button>
       {hasActiveFilters && (
         <button
           type="button"

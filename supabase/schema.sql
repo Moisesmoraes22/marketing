@@ -112,6 +112,7 @@ create table public.content_items (
   omega_score int,
   recommendation text check (recommendation in ('adaptar', 'inspirar', 'ignorar')),
   owner_username text,
+  is_favorite boolean not null default false,
   thumbnail_url text,
   video_url text,
   collected_at timestamptz not null default now(),

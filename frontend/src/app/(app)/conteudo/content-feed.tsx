@@ -20,7 +20,7 @@ import type { ContentItem } from "@/lib/types";
 import { OmegaScore, RecommendationBadge } from "@/components/omega-score";
 import { StatusBadge } from "./status-badge";
 import { VideoPlayer } from "./video-player";
-import { deleteContentItems } from "./actions";
+import { deleteContentItems, toggleFavorite } from "./actions";
 
 const HOVER_PREVIEW_MS = 5000;
 
@@ -57,9 +57,15 @@ export function ContentFeed({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "content_items" },
         (payload) => {
-          const hasFilters = ["type", "potential", "recommendation", "status", "period", "q"].some(
-            (key) => searchParams.get(key),
-          );
+          const hasFilters = [
+            "type",
+            "potential",
+            "recommendation",
+            "status",
+            "period",
+            "q",
+            "favorite",
+          ].some((key) => searchParams.get(key));
           if (page !== 1 || hasFilters) return;
           setItems((current) => [payload.new as ContentItem, ...current].slice(0, 12));
         },
@@ -108,6 +114,22 @@ export function ContentFeed({
 
   function toggleSelectAll() {
     setSelected(allSelected ? new Set() : new Set(items.map((item) => item.id)));
+  }
+
+  function handleToggleFavorite(item: ContentItem) {
+    const next = !item.is_favorite;
+    setItems((current) =>
+      current.map((i) => (i.id === item.id ? { ...i, is_favorite: next } : i)),
+    );
+    setPreviewItem((current) =>
+      current?.id === item.id ? { ...current, is_favorite: next } : current,
+    );
+    toggleFavorite(item.id, next).catch((err) => {
+      toast.error(err instanceof Error ? err.message : "Falha ao favoritar");
+      setItems((current) =>
+        current.map((i) => (i.id === item.id ? { ...i, is_favorite: !next } : i)),
+      );
+    });
   }
 
   function handleDelete() {
@@ -180,6 +202,7 @@ export function ContentFeed({
             onSelect={() =>
               selectMode ? toggleItem(item.id) : setPreviewItem(item)
             }
+            onToggleFavorite={() => handleToggleFavorite(item)}
           />
         ))}
       </div>
@@ -203,11 +226,23 @@ export function ContentFeed({
                 caption={previewItem.caption}
               />
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="capitalize">
-                    {previewItem.media_type}
-                  </Badge>
-                  <StatusBadge status={previewItem.status} />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="capitalize">
+                      {previewItem.media_type}
+                    </Badge>
+                    <StatusBadge status={previewItem.status} />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleToggleFavorite(previewItem)}
+                  >
+                    <Heart
+                      className={cn("h-4 w-4", previewItem.is_favorite && "fill-current text-red-500")}
+                    />
+                    {previewItem.is_favorite ? "Inspiração salva" : "Salvar inspiração"}
+                  </Button>
                 </div>
                 {typeof previewItem.omega_score === "number" && (
                   <div className="flex items-center gap-3 rounded-md border bg-muted/40 px-3 py-2">
@@ -259,11 +294,13 @@ function ContentTile({
   selectMode,
   selected,
   onSelect,
+  onToggleFavorite,
 }: {
   item: ContentItem;
   selectMode: boolean;
   selected: boolean;
   onSelect: () => void;
+  onToggleFavorite: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -341,6 +378,20 @@ function ContentTile({
         <div className="absolute right-1.5 top-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[0.65rem] font-semibold text-white">
           {item.omega_score}
         </div>
+      )}
+      {!selectMode && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
+          aria-label={item.is_favorite ? "Remover dos favoritos" : "Salvar inspiração"}
+          className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 data-[favorite=true]:opacity-100"
+          data-favorite={item.is_favorite}
+        >
+          <Heart className={cn("h-3.5 w-3.5", item.is_favorite && "fill-current text-red-500")} />
+        </button>
       )}
       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-1.5">
         <StatusBadge status={item.status} className="text-[0.65rem]" />

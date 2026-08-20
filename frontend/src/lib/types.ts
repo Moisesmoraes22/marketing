@@ -33,6 +33,7 @@ export interface ContentItem {
   omega_score: number | null;
   recommendation: Recommendation | null;
   owner_username: string | null;
+  is_favorite: boolean;
   thumbnail_url: string | null;
   video_url: string | null;
   collected_at: string;
